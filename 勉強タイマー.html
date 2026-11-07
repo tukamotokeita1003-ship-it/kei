@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>勉強タイマー</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#1f2937;--sub:#6b7280;--study:#2563eb;--rest:#16a34a;--line:#e5e7eb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111827;--card:#1f2937;--text:#f3f4f6;--sub:#9ca3af;--study:#60a5fa;--rest:#4ade80;--line:#374151;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#111827;--card:#1f2937;--text:#f3f4f6;--sub:#9ca3af;--study:#60a5fa;--rest:#4ade80;--line:#374151;color-scheme:dark}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:system-ui,-apple-system,"Hiragino Sans","Noto Sans JP",sans-serif;display:flex;justify-content:center;padding:16px}
+.wrap{width:100%;max-width:440px}
+.tabs{display:flex;gap:8px;margin-bottom:12px}
+.tabs button{flex:1;background:var(--card);color:var(--sub);border:1px solid var(--line)}
+.tabs button.on{background:var(--study);color:#fff;border-color:var(--study)}
+.card{background:var(--card);border-radius:16px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.08);margin-bottom:12px}
+h2{font-size:15px;margin:0 0 10px}
+.phase{text-align:center;font-weight:700;color:var(--study)}
+.phase.rest{color:var(--rest)}
+.time{text-align:center;font-size:60px;font-weight:700;font-variant-numeric:tabular-nums;margin:6px 0}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-bottom:14px}
+.bar>div{height:100%;width:0;background:var(--study)}
+.bar.rest>div{background:var(--rest)}
+.btns{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-size:15px;padding:11px;border:0;border-radius:10px;cursor:pointer;background:var(--study);color:#fff;font-weight:600;flex:1}
+button.sec{background:var(--line);color:var(--text)}
+button.sm{font-size:13px;padding:8px;font-weight:500}
+.info{font-size:13px;color:var(--sub);text-align:center;margin-top:10px}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+.step{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:8px;border-radius:10px;border-left:4px solid var(--study);background:var(--bg);font-size:14px}
+.step.rest{border-left-color:var(--rest)}
+.step.now{outline:2px solid var(--text)}
+.step .n{width:18px;color:var(--sub);font-size:12px}
+select,input[type=number]{font:inherit;font-size:15px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text)}
+input[type=number]{width:60px}
+.x{flex:0 0 32px;padding:6px;background:transparent;color:var(--sub);font-weight:400}
+.chk{display:flex;align-items:center;gap:8px;font-size:14px;margin:8px 0}
+.chk input{width:18px;height:18px}
+.long{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;margin:4px 0 0 26px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .h{font-size:11px;color:var(--sub);text-align:center}
+.cal .d{min-height:52px;border-radius:8px;border:1px solid var(--line);padding:3px;font-size:11px;cursor:pointer;overflow:hidden;background:var(--bg)}
+.cal .d b{display:block;font-size:12px}
+.cal .d.today{border:2px solid var(--text)}
+.cal .d.sel{outline:2px solid var(--study)}
+.cal .e{border:0;background:transparent;cursor:default}
+.mh{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mh button{flex:0 0 44px}
+.mh span{font-weight:700}
+#toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translate(-50%,-200%);background:var(--text);color:var(--bg);padding:14px 20px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:10;max-width:90%;text-align:center}
+#toast.show{transform:translate(-50%,0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="tabs"><button id="tT" class="on">⏱ タイマー</button><button id="tR">📅 記録</button></div>
+
+  <div id="pT">
+    <div class="card">
+      <div class="phase" id="phase">待機中</div>
+      <div class="time" id="time">25:00</div>
+      <div class="bar" id="bar"><div id="fill"></div></div>
+      <div class="btns">
+        <button id="start">開始</button>
+        <button class="sec" id="skip">スキップ</button>
+        <button class="sec" id="reset">リセット</button>
+      </div>
+      <div class="info" id="info"></div>
+    </div>
+
+    <div class="card">
+      <h2>セット内容(上から順に実行)</h2>
+      <fieldset id="fs">
+        <div id="steps"></div>
+        <div class="btns" style="margin-bottom:12px">
+          <button class="sec sm" id="addS">＋ 勉強</button>
+          <button class="sec sm" id="addR">＋ 休憩</button>
+          <button class="sec sm" id="pre1">25分/5分</button>
+          <button class="sec sm" id="pre2">例:5分/30秒/4分/30秒</button>
+        </div>
+        <label class="chk"><input type="checkbox" id="repeat">最後まで行ったら最初から繰り返す</label>
+        <label class="chk"><input type="checkbox" id="longOn">一定回数ごとに長い休憩を入れる</label>
+        <div class="long">勉強<input type="number" id="longN" min="1">回ごとに
+          <input type="number" id="longM" min="0">分<input type="number" id="longS" min="0" max="59">秒休む</div>
+      </fieldset>
+    </div>
+  </div>
+
+  <div id="pR" hidden>
+    <div class="card">
+      <div class="mh"><button class="sec" id="pm">◀</button><span id="mt"></span><button class="sec" id="nm">▶</button></div>
+      <div class="cal" id="cal"></div>
+      <div class="info" id="mtot"></div>
+    </div>
+    <div class="card"><h2 id="dt"></h2><div id="dd" style="font-size:22px;font-weight:700"></div></div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+(function(){
+var $=function(i){return document.getElementById(i)};
+function load(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
+
+var cfg=load('st_cfg_v2')||{steps:[{t:'study',m:25,s:0},{t:'rest',m:5,s:0}],repeat:true,longOn:false,longN:4,longM:15,longS:0};
+var rec=load('st_rec_v2')||{};
+var running=false,started=false,idx=0,cur=null,endAt=0,total=0,remainMs=0,lastT=0,tick=null,pending=-1,studyDone=0,audioCtx=null,lastSave=0;
+
+function dur(m,s){return Math.max(1,(m||0)*60+(s||0))*1000}
+function fmt(ms){var s=Math.max(0,Math.ceil(ms/1000));return String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+function dayKey(d){d=d||new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function longD(sec){sec=Math.round(sec);var h=Math.floor(sec/3600),m=Math.floor(sec%3600/60),s=sec%60;
+  if(h>0)return h+'時間'+m+'分';if(m>0)return m+'分'+s+'秒';return s+'秒'}
+function shortD(sec){sec=Math.round(sec);var h=Math.floor(sec/3600),m=Math.floor(sec%3600/60);
+  if(h>0)return h+'h'+m+'m';if(m>0)return m+'m';return sec+'s'}
+
+/* ---------- 通知 ---------- */
+function beep(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+  [0,.25,.5].forEach(function(t){var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=880;
+  o.connect(g);g.connect(audioCtx.destination);g.gain.setValueAtTime(.2,audioCtx.currentTime+t);
+  g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+t+.2);o.start(audioCtx.currentTime+t);o.stop(audioCtx.currentTime+t+.2)})}catch(e){}}
+function notify(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},5000);beep();
+  try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}
+  try{if('Notification' in window&&Notification.permission==='granted')new Notification('勉強タイマー',{body:msg})}catch(e){}}
+
+/* ---------- セット編集 ---------- */
+function saveCfg(){save('st_cfg_v2',cfg)}
+function renderSteps(){
+  $('steps').innerHTML=cfg.steps.map(function(st,i){
+    return '<div class="step '+st.t+(started&&cur&&!cur.long&&i===idx?' now':'')+'"><span class="n">'+(i+1)+'</span>'+
+    '<select data-i="'+i+'" data-f="t"><option value="study"'+(st.t==='study'?' selected':'')+'>勉強</option><option value="rest"'+(st.t==='rest'?' selected':'')+'>休憩</option></select>'+
+    '<input type="number" min="0" data-i="'+i+'" data-f="m" value="'+st.m+'">分<input type="number" min="0" max="59" data-i="'+i+'" data-f="s" value="'+st.s+'">秒'+
+    '<button class="x" data-del="'+i+'">✕</button></div>'}).join('');
+}
+function idleView(){if(!started){var f=cfg.steps[0];$('time').textContent=f?fmt(dur(f.m,f.s)):'00:00';
+  $('info').textContent=started?'':'今日の学習: '+longD(rec[dayKey()]||0)}}
+$('steps').addEventListener('input',function(e){var d=e.target.dataset;if(d.f==null)return;var st=cfg.steps[+d.i];
+  st[d.f]=d.f==='t'?e.target.value:Math.max(0,parseInt(e.target.value,10)||0);
+  if(d.f==='t'){renderSteps()}saveCfg();idleView()});
+$('steps').addEventListener('click',function(e){var d=e.target.dataset.del;if(d==null)return;
+  if(cfg.steps.length>1){cfg.steps.splice(+d,1);saveCfg();renderSteps();idleView()}});
+$('addS').onclick=function(){cfg.steps.push({t:'study',m:25,s:0});saveCfg();renderSteps()};
+$('addR').onclick=function(){cfg.steps.push({t:'rest',m:5,s:0});saveCfg();renderSteps()};
+$('pre1').onclick=function(){cfg.steps=[{t:'study',m:25,s:0},{t:'rest',m:5,s:0}];saveCfg();renderSteps();idleView()};
+$('pre2').onclick=function(){cfg.steps=[{t:'study',m:5,s:0},{t:'rest',m:0,s:30},{t:'study',m:4,s:0},{t:'rest',m:0,s:30}];cfg.repeat=true;bindOpts();saveCfg();renderSteps();idleView()};
+function bindOpts(){$('repeat').checked=cfg.repeat;$('longOn').checked=cfg.longOn;$('longN').value=cfg.longN;$('longM').value=cfg.longM;$('longS').value=cfg.longS}
+['repeat','longOn'].forEach(function(id){$(id).onchange=function(){cfg[id]=$(id).checked;saveCfg()}});
+['longN','longM','longS'].forEach(function(id){$(id).oninput=function(){cfg[id]=Math.max(0,parseInt($(id).value,10)||0);saveCfg()}});
+
+/* ---------- タイマー本体 ---------- */
+function setPhase(type,label){$('phase').textContent=label;$('phase').className='phase'+(type==='rest'?' rest':'');$('bar').className='bar'+(type==='rest'?' rest':'')}
+function startCur(type,ms,isLong,label){cur={type:type,long:isLong};total=ms;endAt=Date.now()+ms;lastT=Date.now();setPhase(type,label);renderSteps();render()}
+function runStep(n){idx=n;var st=cfg.steps[n];
+  startCur(st.t,dur(st.m,st.s),false,(st.t==='study'?'📖 勉強中':'☕ 休憩中')+'(ステップ '+(n+1)+'/'+cfg.steps.length+')')}
+function nextAfter(n,long){
+  if(n>=cfg.steps.length)n=cfg.repeat?0:-1;
+  if(long){pending=n;startCur('rest',dur(cfg.longM,cfg.longS),true,'🌿 長い休憩中');return}
+  if(n<0){stopAll(true);return}
+  runStep(n);
+}
+function finish(){
+  addRec();
+  var wasStudy=cur.type==='study'&&!cur.long;
+  if(cur.long){var p=pending;notify('長い休憩終了!');nextAfter(p<0?cfg.steps.length:p,false);return}
+  var n=idx+1,long=false;
+  if(wasStudy){studyDone++;if(cfg.longOn&&cfg.longN>0&&studyDone%cfg.longN===0){long=true;if(n<cfg.steps.length&&cfg.steps[n].t==='rest')n++}}
+  var next=n>=cfg.steps.length?(cfg.repeat?0:-1):n;
+  if(long)notify('勉強'+studyDone+'回達成!長い休憩です('+longD(dur(cfg.longM,cfg.longS)/1000)+')');
+  else if(next<0)notify('すべて終了!お疲れさまでした。');
+  else{var s=cfg.steps[next];notify(s.t==='rest'?'休憩の時間です('+longD(dur(s.m,s.s)/1000)+')':'勉強を始めましょう('+longD(dur(s.m,s.s)/1000)+')')}
+  nextAfter(n,long);
+}
+function addRec(){var now=Date.now();if(cur&&cur.type==='study'&&lastT){var up=Math.min(now,endAt),d=(up-lastT)/1000;
+  if(d>0){var k=dayKey();rec[k]=(rec[k]||0)+d}}lastT=now;
+  if(now-lastSave>5000){save('st_rec_v2',rec);lastSave=now}}
+function render(){var left=endAt-Date.now();$('time').textContent=fmt(left);
+  $('fill').style.width=Math.min(100,Math.max(0,(1-left/total)*100))+'%';
+  document.title=(running?fmt(left)+' ':'')+'勉強タイマー';
+  $('info').textContent='今日の学習: '+longD(rec[dayKey()]||0)+'/勉強回数: '+studyDone}
+function loop(){if(!running)return;addRec();render();if(endAt-Date.now()<=0)finish()}
+function stopAll(done){running=false;started=false;clearInterval(tick);addRec();save('st_rec_v2',rec);cur=null;
+  setPhase('idle','待機中');$('fill').style.width='0';$('start').textContent='開始';$('fs').disabled=false;
+  document.title='勉強タイマー';renderSteps();idleView();if(done)$('info').textContent='完了!今日の学習: '+longD(rec[dayKey()]||0)}
+$('start').onclick=function(){
+  if(!running){
+    try{if('Notification' in window&&Notification.permission==='default')Notification.requestPermission()}catch(e){}
+    try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume()}catch(e){}
+    running=true;$('fs').disabled=true;
+    if(!started){started=true;studyDone=0;runStep(0)}else{endAt=Date.now()+remainMs;lastT=Date.now()}
+    $('start').textContent='一時停止';tick=setInterval(loop,250);
+  }else{addRec();running=false;clearInterval(tick);remainMs=endAt-Date.now();save('st_rec_v2',rec);$('start').textContent='再開'}
+};
+$('skip').onclick=function(){if(started){addRec();if(!running){running=true;tick=setInterval(loop,250);$('start').textContent='一時停止'}endAt=Date.now();finish()}};
+$('reset').onclick=function(){stopAll(false)};
+
+/* ---------- 記録(カレンダー) ---------- */
+var vy=new Date().getFullYear(),vm=new Date().getMonth(),sel=dayKey();
+function renderCal(){
+  $('mt').textContent=vy+'年'+(vm+1)+'月';
+  var days=new Date(vy,vm+1,0).getDate(),first=new Date(vy,vm,1).getDay(),h='',tot=0,td=dayKey();
+  '日月火水木金土'.split('').forEach(function(w){h+='<div class="h">'+w+'</div>'});
+  for(var i=0;i<first;i++)h+='<div class="d e"></div>';
+  for(var d=1;d<=days;d++){var k=vy+'-'+String(vm+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'),s=rec[k]||0;tot+=s;
+    var a=s>0?Math.min(70,15+s/3600*20):0;
+    h+='<div class="d'+(k===td?' today':'')+(k===sel?' sel':'')+'" data-k="'+k+'" style="background:'+(a?'color-mix(in srgb,var(--study) '+a+'%,transparent)':'var(--bg)')+'"><b>'+d+'</b>'+(s>0?shortD(s):'')+'</div>'}
+  $('cal').innerHTML=h;$('mtot').textContent='今月の合計: '+longD(tot);showDay();
+}
+function showDay(){var p=sel.split('-');$('dt').textContent=(+p[1])+'月'+(+p[2])+'日の学習時間';$('dd').textContent=(rec[sel]||0)>0?longD(rec[sel]):'記録なし'}
+$('cal').onclick=function(e){var el=e.target.closest('.d');if(el&&el.dataset.k){sel=el.dataset.k;renderCal()}};
+$('pm').onclick=function(){vm--;if(vm<0){vm=11;vy--}renderCal()};
+$('nm').onclick=function(){vm++;if(vm>11){vm=0;vy++}renderCal()};
+function tab(r){$('pT').hidden=r;$('pR').hidden=!r;$('tT').className=r?'':'on';$('tR').className=r?'on':'';if(r){save('st_rec_v2',rec);renderCal()}}
+$('tT').onclick=function(){tab(false)};$('tR').onclick=function(){tab(true)};
+window.addEventListener('pagehide',function(){save('st_rec_v2',rec)});
+
+bindOpts();renderSteps();setPhase('idle','待機中');idleView();
+})();
+</script>
+</body>
+</html>

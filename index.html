@@ -40,10 +40,15 @@ button.sm{font-size:13px;padding:8px;font-weight:500}
 fieldset{border:0;margin:0;padding:0;min-width:0}
 .step{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:8px;border-radius:10px;border-left:4px solid var(--study);background:var(--bg);font-size:14px}
 .step.rest{border-left-color:var(--rest)}
+.step.workout{border-left-color:#f97316}
+.phase.workout{color:#f97316}
+.bar.workout>div{background:#f97316}
+.step{flex-wrap:wrap}
+.mv{flex:0 0 30px;padding:6px 0;background:var(--line);color:var(--text);font-size:12px;font-weight:400}
 .step.now{outline:2px solid var(--text)}
 .step .n{width:18px;color:var(--sub);font-size:12px}
 select,input[type=number]{font:inherit;font-size:15px;padding:6px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--text)}
-input[type=number]{width:60px}
+input[type=number]{width:54px}
 .x{flex:0 0 32px;padding:6px;background:transparent;color:var(--sub);font-weight:400}
 .chk{display:flex;align-items:center;gap:8px;font-size:14px;margin:8px 0}
 .chk input{width:18px;height:18px}
@@ -86,8 +91,6 @@ input[type=number]{width:60px}
         <div class="btns" style="margin-bottom:12px">
           <button class="sec sm" id="addS">＋ 勉強</button>
           <button class="sec sm" id="addR">＋ 休憩</button>
-          <button class="sec sm" id="pre1">25分/5分</button>
-          <button class="sec sm" id="pre2">例:5分/30秒/4分/30秒</button>
         </div>
         <label class="chk"><input type="checkbox" id="repeat">最後まで行ったら最初から繰り返す</label>
         <label class="chk"><input type="checkbox" id="longOn">一定回数ごとに長い休憩を入れる</label>
@@ -103,7 +106,7 @@ input[type=number]{width:60px}
       <div class="cal" id="cal"></div>
       <div class="info" id="mtot"></div>
     </div>
-    <div class="card"><h2 id="dt"></h2><div id="dd" style="font-size:22px;font-weight:700"></div></div>
+    <div class="card"><h2 id="dt"></h2><div id="dd" style="font-size:22px;font-weight:700"></div><div id="dw" class="info" style="text-align:left"></div></div>
   </div>
 </div>
 <div id="toast"></div>
@@ -114,7 +117,7 @@ var $=function(i){return document.getElementById(i)};
 function load(k){try{var v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}}
 function save(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}
 
-var cfg=load('st_cfg_v2')||{steps:[{t:'study',m:25,s:0},{t:'rest',m:5,s:0}],repeat:true,longOn:false,longN:4,longM:15,longS:0};
+var cfg=load('st_cfg_v3')||{steps:[{t:'study',m:50,s:0},{t:'rest',m:10,s:0}],repeat:true,longOn:false,longN:4,longM:15,longS:0};
 var rec=load('st_rec_v2')||{};
 var running=false,started=false,idx=0,cur=null,endAt=0,total=0,remainMs=0,lastT=0,tick=null,pending=-1,studyDone=0,audioCtx=null,lastSave=0;
 
@@ -136,12 +139,13 @@ function notify(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');
   try{if('Notification' in window&&Notification.permission==='granted')new Notification('勉強タイマー',{body:msg})}catch(e){}}
 
 /* ---------- セット編集 ---------- */
-function saveCfg(){save('st_cfg_v2',cfg)}
+function saveCfg(){save('st_cfg_v3',cfg)}
 function renderSteps(){
   $('steps').innerHTML=cfg.steps.map(function(st,i){
     return '<div class="step '+st.t+(started&&cur&&!cur.long&&i===idx?' now':'')+'"><span class="n">'+(i+1)+'</span>'+
-    '<select data-i="'+i+'" data-f="t"><option value="study"'+(st.t==='study'?' selected':'')+'>勉強</option><option value="rest"'+(st.t==='rest'?' selected':'')+'>休憩</option></select>'+
+    '<select data-i="'+i+'" data-f="t"><option value="study"'+(st.t==='study'?' selected':'')+'>勉強</option><option value="rest"'+(st.t==='rest'?' selected':'')+'>休憩</option><option value="workout"'+(st.t==='workout'?' selected':'')+'>筋トレ</option></select>'+
     '<input type="number" min="0" data-i="'+i+'" data-f="m" value="'+st.m+'">分<input type="number" min="0" max="59" data-i="'+i+'" data-f="s" value="'+st.s+'">秒'+
+    '<button class="mv" data-up="'+i+'"'+(i===0?' disabled':'')+'>▲</button><button class="mv" data-dn="'+i+'"'+(i===cfg.steps.length-1?' disabled':'')+'>▼</button>'+
     '<button class="x" data-del="'+i+'">✕</button></div>'}).join('');
 }
 function idleView(){if(!started){var f=cfg.steps[0];$('time').textContent=f?fmt(dur(f.m,f.s)):'00:00';
@@ -149,21 +153,23 @@ function idleView(){if(!started){var f=cfg.steps[0];$('time').textContent=f?fmt(
 $('steps').addEventListener('input',function(e){var d=e.target.dataset;if(d.f==null)return;var st=cfg.steps[+d.i];
   st[d.f]=d.f==='t'?e.target.value:Math.max(0,parseInt(e.target.value,10)||0);
   if(d.f==='t'){renderSteps()}saveCfg();idleView()});
-$('steps').addEventListener('click',function(e){var d=e.target.dataset.del;if(d==null)return;
-  if(cfg.steps.length>1){cfg.steps.splice(+d,1);saveCfg();renderSteps();idleView()}});
+$('steps').addEventListener('click',function(e){var ds=e.target.dataset,a=cfg.steps;
+  if(ds.up!=null){var i=+ds.up;if(i>0){var t=a[i-1];a[i-1]=a[i];a[i]=t}}
+  else if(ds.dn!=null){var j=+ds.dn;if(j<a.length-1){var u=a[j+1];a[j+1]=a[j];a[j]=u}}
+  else if(ds.del!=null){if(a.length>1)a.splice(+ds.del,1);else return}
+  else return;
+  saveCfg();renderSteps();idleView()});
 $('addS').onclick=function(){cfg.steps.push({t:'study',m:25,s:0});saveCfg();renderSteps()};
 $('addR').onclick=function(){cfg.steps.push({t:'rest',m:5,s:0});saveCfg();renderSteps()};
-$('pre1').onclick=function(){cfg.steps=[{t:'study',m:25,s:0},{t:'rest',m:5,s:0}];saveCfg();renderSteps();idleView()};
-$('pre2').onclick=function(){cfg.steps=[{t:'study',m:5,s:0},{t:'rest',m:0,s:30},{t:'study',m:4,s:0},{t:'rest',m:0,s:30}];cfg.repeat=true;bindOpts();saveCfg();renderSteps();idleView()};
 function bindOpts(){$('repeat').checked=cfg.repeat;$('longOn').checked=cfg.longOn;$('longN').value=cfg.longN;$('longM').value=cfg.longM;$('longS').value=cfg.longS}
 ['repeat','longOn'].forEach(function(id){$(id).onchange=function(){cfg[id]=$(id).checked;saveCfg()}});
 ['longN','longM','longS'].forEach(function(id){$(id).oninput=function(){cfg[id]=Math.max(0,parseInt($(id).value,10)||0);saveCfg()}});
 
 /* ---------- タイマー本体 ---------- */
-function setPhase(type,label){$('phase').textContent=label;$('phase').className='phase'+(type==='rest'?' rest':'');$('bar').className='bar'+(type==='rest'?' rest':'')}
+function setPhase(type,label){$('phase').textContent=label;var c=type==='rest'?' rest':type==='workout'?' workout':'';$('phase').className='phase'+c;$('bar').className='bar'+c}
 function startCur(type,ms,isLong,label){cur={type:type,long:isLong};total=ms;endAt=Date.now()+ms;lastT=Date.now();setPhase(type,label);renderSteps();render()}
 function runStep(n){idx=n;var st=cfg.steps[n];
-  startCur(st.t,dur(st.m,st.s),false,(st.t==='study'?'📖 勉強中':'☕ 休憩中')+'(ステップ '+(n+1)+'/'+cfg.steps.length+')')}
+  startCur(st.t,dur(st.m,st.s),false,(st.t==='study'?'📖 勉強中':st.t==='workout'?'💪 筋トレ中':'☕ 休憩中')+'(ステップ '+(n+1)+'/'+cfg.steps.length+')')}
 function nextAfter(n,long){
   if(n>=cfg.steps.length)n=cfg.repeat?0:-1;
   if(long){pending=n;startCur('rest',dur(cfg.longM,cfg.longS),true,'🌿 長い休憩中');return}
@@ -179,11 +185,11 @@ function finish(){
   var next=n>=cfg.steps.length?(cfg.repeat?0:-1):n;
   if(long)notify('勉強'+studyDone+'回達成!長い休憩です('+longD(dur(cfg.longM,cfg.longS)/1000)+')');
   else if(next<0)notify('すべて終了!お疲れさまでした。');
-  else{var s=cfg.steps[next];notify(s.t==='rest'?'休憩の時間です('+longD(dur(s.m,s.s)/1000)+')':'勉強を始めましょう('+longD(dur(s.m,s.s)/1000)+')')}
+  else{var s=cfg.steps[next];notify((s.t==='rest'?'休憩の時間です(':s.t==='workout'?'筋トレを始めましょう(':'勉強を始めましょう(')+longD(dur(s.m,s.s)/1000)+')')}
   nextAfter(n,long);
 }
-function addRec(){var now=Date.now();if(cur&&cur.type==='study'&&lastT){var up=Math.min(now,endAt),d=(up-lastT)/1000;
-  if(d>0){var k=dayKey();rec[k]=(rec[k]||0)+d}}lastT=now;
+function addRec(){var now=Date.now();if(cur&&(cur.type==='study'||cur.type==='workout')&&lastT){var up=Math.min(now,endAt),d=(up-lastT)/1000;
+  if(d>0){var k=(cur.type==='workout'?'w:':'')+dayKey();rec[k]=(rec[k]||0)+d}}lastT=now;
   if(now-lastSave>5000){save('st_rec_v2',rec);lastSave=now}}
 function render(){var left=endAt-Date.now();$('time').textContent=fmt(left);
   $('fill').style.width=Math.min(100,Math.max(0,(1-left/total)*100))+'%';
@@ -217,7 +223,7 @@ function renderCal(){
     h+='<div class="d'+(k===td?' today':'')+(k===sel?' sel':'')+'" data-k="'+k+'" style="background:'+(a?'color-mix(in srgb,var(--study) '+a+'%,transparent)':'var(--bg)')+'"><b>'+d+'</b>'+(s>0?shortD(s):'')+'</div>'}
   $('cal').innerHTML=h;$('mtot').textContent='今月の合計: '+longD(tot);showDay();
 }
-function showDay(){var p=sel.split('-');$('dt').textContent=(+p[1])+'月'+(+p[2])+'日の学習時間';$('dd').textContent=(rec[sel]||0)>0?longD(rec[sel]):'記録なし'}
+function showDay(){var p=sel.split('-');$('dt').textContent=(+p[1])+'月'+(+p[2])+'日の学習時間';$('dd').textContent=(rec[sel]||0)>0?longD(rec[sel]):'記録なし';var w=rec['w:'+sel]||0;$('dw').textContent=w>0?'💪 筋トレ: '+longD(w):''}
 $('cal').onclick=function(e){var el=e.target.closest('.d');if(el&&el.dataset.k){sel=el.dataset.k;renderCal()}};
 $('pm').onclick=function(){vm--;if(vm<0){vm=11;vy--}renderCal()};
 $('nm').onclick=function(){vm++;if(vm>11){vm=0;vy++}renderCal()};

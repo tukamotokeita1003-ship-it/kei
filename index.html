@@ -4,6 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>勉強タイマー</title>
+<meta name="theme-color" content="#2563eb">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="勉強タイマー">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+
 <style>
 :root{--bg:#f6f7f9;--card:#fff;--text:#1f2937;--sub:#6b7280;--study:#2563eb;--rest:#16a34a;--line:#e5e7eb;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#111827;--card:#1f2937;--text:#f3f4f6;--sub:#9ca3af;--study:#60a5fa;--rest:#4ade80;--line:#374151;color-scheme:dark}}
@@ -218,6 +227,9 @@ window.addEventListener('pagehide',function(){save('st_rec_v2',rec)});
 
 bindOpts();renderSteps();setPhase('idle','待機中');idleView();
 })();
+</script>
+<script>
+if('serviceWorker' in navigator){window.addEventListener('load',function(){try{navigator.serviceWorker.register('sw.js').catch(function(){})}catch(e){}})}
 </script>
 </body>
 </html>

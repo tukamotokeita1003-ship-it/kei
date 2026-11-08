@@ -62,7 +62,7 @@ input[type=number]{width:54px}
 .long{display:flex;align-items:center;gap:6px;flex-wrap:wrap;font-size:14px;margin:4px 0 0 26px}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
 .cal .h{font-size:11px;color:var(--sub);text-align:center}
-.cal .d{min-height:52px;border-radius:8px;border:1px solid var(--line);padding:3px;font-size:11px;cursor:pointer;overflow:hidden;background:var(--bg)}
+.cal .d{min-height:62px;border-radius:8px;border:1px solid var(--line);padding:3px;font-size:11px;cursor:pointer;overflow:hidden;background:var(--bg)}
 .cal .d b{display:block;font-size:12px}
 .cal .d.today{border:2px solid var(--text)}
 .cal .d.sel{outline:2px solid var(--study)}
@@ -91,17 +91,29 @@ textarea#memo{width:100%;margin-top:10px;font:inherit;font-size:16px;padding:10p
 .grow .gdot{flex:0 0 32px;width:32px;height:32px;border-radius:50%;padding:0;border:2px solid var(--line)}
 .grow input{flex:1;min-width:0;font:inherit;font-size:16px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text)}
 .grow .x{flex:0 0 32px}
+:root{--bg:#fff7e6;--card:#fffdf8;--line:#f0e3c4;--paw:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cg fill='%23f2dca8' opacity='.7' transform='translate%2814 18%29 rotate%28-18 20 20%29 scale%28.38%29'%3E%3Cellipse cx='50' cy='68' rx='22' ry='18'/%3E%3Ccircle cx='20' cy='42' r='9'/%3E%3Ccircle cx='39' cy='25' r='9'/%3E%3Ccircle cx='61' cy='25' r='9'/%3E%3Ccircle cx='80' cy='42' r='9'/%3E%3C/g%3E%3Cg fill='%23f2dca8' opacity='.7' transform='translate%2888 86%29 rotate%2822 20 20%29 scale%28.38%29'%3E%3Cellipse cx='50' cy='68' rx='22' ry='18'/%3E%3Ccircle cx='20' cy='42' r='9'/%3E%3Ccircle cx='39' cy='25' r='9'/%3E%3Ccircle cx='61' cy='25' r='9'/%3E%3Ccircle cx='80' cy='42' r='9'/%3E%3C/g%3E%3C/svg%3E");--pawbig:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%23f2dca8' opacity='.6'%3E%3Cellipse cx='50' cy='68' rx='22' ry='18'/%3E%3Ccircle cx='20' cy='42' r='9'/%3E%3Ccircle cx='39' cy='25' r='9'/%3E%3Ccircle cx='61' cy='25' r='9'/%3E%3Ccircle cx='80' cy='42' r='9'/%3E%3C/g%3E%3C/svg%3E")}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1c1917;--card:#292524;--line:#44403c;--paw:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cg fill='%233a332d' opacity='.7' transform='translate%2814 18%29 rotate%28-18 20 20%29 scale%28.38%29'%3E%3Cellipse cx='50' cy='68' rx='22' ry='18'/%3E%3Ccircle cx='20' cy='42' r='9'/%3E%3Ccircle cx='39' cy='25' r='9'/%3E%3Ccircle cx='61' cy='25' r='9'/%3E%3Ccircle cx='80' cy='42' r='9'/%3E%3C/g%3E%3Cg fill='%233a332d' opacity='.7' transform='translate%2888 86%29 rotate%2822 20 20%29 scale%28.38%29'%3E%3Cellipse cx='50' cy='68' rx='22' ry='18'/%3E%3Ccircle cx='20' cy='42' r='9'/%3E%3Ccircle cx='39' cy='25' r='9'/%3E%3Ccircle cx='61' cy='25' r='9'/%3E%3Ccircle cx='80' cy='42' r='9'/%3E%3C/g%3E%3C/svg%3E");--pawbig:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%233a332d' opacity='.6'%3E%3Cellipse cx='50' cy='68' rx='22' ry='18'/%3E%3Ccircle cx='20' cy='42' r='9'/%3E%3Ccircle cx='39' cy='25' r='9'/%3E%3Ccircle cx='61' cy='25' r='9'/%3E%3Ccircle cx='80' cy='42' r='9'/%3E%3C/g%3E%3C/svg%3E")}}
+:root[data-theme="dark"]{--bg:#1c1917;--card:#292524;--line:#44403c;--paw:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='150' height='150'%3E%3Cg fill='%233a332d' opacity='.7' transform='translate%2814 18%29 rotate%28-18 20 20%29 scale%28.38%29'%3E%3Cellipse cx='50' cy='68' rx='22' ry='18'/%3E%3Ccircle cx='20' cy='42' r='9'/%3E%3Ccircle cx='39' cy='25' r='9'/%3E%3Ccircle cx='61' cy='25' r='9'/%3E%3Ccircle cx='80' cy='42' r='9'/%3E%3C/g%3E%3Cg fill='%233a332d' opacity='.7' transform='translate%2888 86%29 rotate%2822 20 20%29 scale%28.38%29'%3E%3Cellipse cx='50' cy='68' rx='22' ry='18'/%3E%3Ccircle cx='20' cy='42' r='9'/%3E%3Ccircle cx='39' cy='25' r='9'/%3E%3Ccircle cx='61' cy='25' r='9'/%3E%3Ccircle cx='80' cy='42' r='9'/%3E%3C/g%3E%3C/svg%3E");--pawbig:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cg fill='%233a332d' opacity='.6'%3E%3Cellipse cx='50' cy='68' rx='22' ry='18'/%3E%3Ccircle cx='20' cy='42' r='9'/%3E%3Ccircle cx='39' cy='25' r='9'/%3E%3Ccircle cx='61' cy='25' r='9'/%3E%3Ccircle cx='80' cy='42' r='9'/%3E%3C/g%3E%3C/svg%3E")}
+body{background-image:var(--paw);background-attachment:fixed}
+#pT .card:first-of-type{background-image:var(--pawbig);background-repeat:no-repeat;background-position:right 10px bottom 8px;background-size:64px}
+.hd{text-align:center;font-weight:800;font-size:17px;margin:2px 0 10px;letter-spacing:.05em;color:#d97706}
+@media (hover:hover) and (pointer:fine){
+.fr .nm{flex:1 1 calc(60% - 6px)}
+.fr select{flex:1 1 calc(40% - 6px);max-width:none}
+.fr .ex{flex:1 1 120px}
+}
 #toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translate(-50%,-200%);background:var(--text);color:var(--bg);padding:14px 20px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:10;max-width:90%;text-align:center}
 #toast.show{transform:translate(-50%,0)}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <div class="tabs"><button id="tT" class="on">⏱ タイマー</button><button id="tR">📅 記録</button><button id="tF">💰 家計</button></div>
+  <div class="hd">🐾 勉強タイマー 🐾</div>
+  <div class="tabs"><button id="tT" class="on">🐶 タイマー</button><button id="tR">🐾 記録</button><button id="tF">🦴 家計</button></div>
 
   <div id="pT">
     <div class="card">
-      <div class="phase" id="phase">待機中</div>
+      <div class="phase" id="phase">🐾 待機中</div>
       <div class="time" id="time">25:00</div>
       <div class="bar" id="bar"><div id="fill"></div></div>
       <div class="btns">
@@ -109,6 +121,7 @@ textarea#memo{width:100%;margin-top:10px;font:inherit;font-size:16px;padding:10p
         <button class="sec" id="skip">スキップ</button>
         <button class="sec" id="reset">リセット</button>
       </div>
+      <button class="sec sm" id="pip" style="width:100%;margin-top:10px">🪟 ミニ表示(タイマーだけ右下に小さく表示)</button>
       <div class="info" id="info"></div>
     </div>
 
@@ -141,7 +154,7 @@ textarea#memo{width:100%;margin-top:10px;font:inherit;font-size:16px;padding:10p
       <div class="mh"><button class="sec" id="fpm">◀</button><span id="fmt"></span><button class="sec" id="fnm">▶</button></div>
       <div class="sum"><div><small>収入</small><b id="s_in"></b></div><div><small>支出</small><b id="s_out"></b></div><div><small>収支</small><b id="s_bal"></b></div></div>
     </div>
-    <div class="card"><h2>🏦 グループ別の入金額(支出−収入)</h2><div id="grpSum"></div></div>
+    <div class="card"><h2>🏦 グループ別の入金額(支出のみ)</h2><div id="grpSum"></div></div>
     <div class="card"><h2>💴 収入(お小遣い・支援・給料など)</h2><div id="fin_in_l"></div><button class="sec sm" style="width:100%" data-add="in">＋ 収入を追加</button></div>
     <div class="card"><h2>💳 支出(カード・現金・固定費など)</h2><div id="fin_out_l"></div><button class="sec sm" style="width:100%" data-add="out">＋ 支出を追加</button></div>
     <div class="card"><h2>🎨 グループの設定</h2><div id="grpList"></div><button class="sec sm" style="width:100%" data-gadd="1">＋ グループを追加</button>
@@ -176,7 +189,7 @@ function beep(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAu
   [0,.25,.5].forEach(function(t){var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=880;
   o.connect(g);g.connect(audioCtx.destination);g.gain.setValueAtTime(.2,audioCtx.currentTime+t);
   g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+t+.2);o.start(audioCtx.currentTime+t);o.stop(audioCtx.currentTime+t+.2)})}catch(e){}}
-function notify(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},5000);beep();
+function notify(msg){var t=$('toast');t.textContent='🐾 '+msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},5000);beep();
   try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}
   try{if('Notification' in window&&Notification.permission==='granted')new Notification('勉強タイマー',{body:msg})}catch(e){}}
 
@@ -213,10 +226,10 @@ function updLong(){$('longRow').style.opacity=cfg.longOn?1:.35;['longN','longM',
 function setPhase(type,label){$('phase').textContent=label;var c=type==='rest'?' rest':type==='workout'?' workout':'';$('phase').className='phase'+c;$('bar').className='bar'+c}
 function startCur(type,ms,isLong,label){cur={type:type,long:isLong};total=ms;endAt=Date.now()+ms;lastT=Date.now();setPhase(type,label);renderSteps();render()}
 function runStep(n){idx=n;var st=cfg.steps[n];curStep=st;
-  startCur(st.t,dur(st.m,st.s),false,(st.t==='study'?'📖 勉強中':st.t==='workout'?'💪 筋トレ中':'☕ 休憩中')+'(ステップ '+(n+1)+'/'+cfg.steps.length+')')}
+  startCur(st.t,dur(st.m,st.s),false,(st.t==='study'?'🐶 勉強中':st.t==='workout'?'🐕 筋トレ中':'🦴 休憩中')+'(ステップ '+(n+1)+'/'+cfg.steps.length+')')}
 function nextAfter(n,long){
   if(n>=cfg.steps.length)n=cfg.repeat?0:-1;
-  if(long){pending=n;pendStep=cfg.steps[n]||null;startCur('rest',dur(cfg.longM,cfg.longS),true,'🌿 長い休憩中');return}
+  if(long){pending=n;pendStep=cfg.steps[n]||null;startCur('rest',dur(cfg.longM,cfg.longS),true,'🐩 長い休憩中');return}
   if(n<0){stopAll(true);return}
   runStep(n);
 }
@@ -241,7 +254,7 @@ function render(){var left=endAt-Date.now();$('time').textContent=fmt(left);
   $('info').textContent='今日の学習: '+longD(rec[dayKey()]||0)+'/勉強回数: '+studyDone}
 function loop(){if(!running)return;addRec();render();if(endAt-Date.now()<=0)finish()}
 function stopAll(done){running=false;started=false;clearInterval(tick);addRec();save('st_rec_v2',rec);cur=null;
-  setPhase('idle','待機中');$('fill').style.width='0';$('start').textContent='開始';$('fs').disabled=false;
+  setPhase('idle','🐾 待機中');$('fill').style.width='0';$('start').textContent='開始';$('fs').disabled=false;
   document.title='勉強タイマー';renderSteps();idleView();if(done)$('info').textContent='完了!今日の学習: '+longD(rec[dayKey()]||0)}
 $('start').onclick=function(){
   if(!running){
@@ -264,7 +277,7 @@ function renderCal(){
   for(var i=0;i<first;i++)h+='<div class="d e"></div>';
   for(var d=1;d<=days;d++){var k=vy+'-'+String(vm+1).padStart(2,'0')+'-'+String(d).padStart(2,'0'),s=rec[k]||0;tot+=s;
     var a=s>0?Math.min(70,15+s/3600*20):0;
-    h+='<div class="d'+(k===td?' today':'')+(k===sel?' sel':'')+(memo[k]?' memo':'')+'" data-k="'+k+'" style="background:'+(a?'color-mix(in srgb,var(--study) '+a+'%,transparent)':'var(--bg)')+'"><b>'+d+'</b>'+(s>0?shortD(s):'')+'</div>'}
+    h+='<div class="d'+(k===td?' today':'')+(k===sel?' sel':'')+(memo[k]?' memo':'')+'" data-k="'+k+'" style="background:'+(a?'color-mix(in srgb,var(--study) '+a+'%,transparent)':'var(--bg)')+'"><b>'+d+'</b>'+(s>0?shortD(s)+'<br>'+'🐾'.repeat(Math.min(3,Math.ceil(s/3600))):'')+'</div>'}
   $('cal').innerHTML=h;$('mtot').textContent='今月の勉強合計: '+longD(tot);var ft=finTotals(mk(vy,vm));$('mfin').textContent=(fin[mk(vy,vm)]||[]).length?'💰 収入 '+yen(ft.i)+' / 支出 '+yen(ft.o)+' / 収支 '+yen(ft.i-ft.o):'';showDay();
 }
 function showDay(){var p=sel.split('-');$('dt').textContent=(+p[1])+'月'+(+p[2])+'日の学習時間';$('dd').textContent=(rec[sel]||0)>0?longD(rec[sel]):'記録なし';var w=rec['w:'+sel]||0;$('dw').textContent=w>0?'💪 筋トレ: '+longD(w):'';$('memo').value=memo[sel]||''}
@@ -289,7 +302,7 @@ function grpSave(){save('st_grp_v1',groups)}
 function gfind(id){for(var i=0;i<groups.length;i++)if(groups[i].id===id)return groups[i];return null}
 function gcol(id){var g=gfind(id);return g?PAL[g.c%PAL.length]:''}
 function renderGroups(){$('grpList').innerHTML=groups.map(function(g,i){return '<div class="grow" data-gi="'+i+'"><button class="gdot" data-gc="1" style="background:'+PAL[g.c%PAL.length]+'"></button><input type="text" class="gname" placeholder="グループ名(例: A銀行)" value="'+esc(g.n)+'"><button class="x" data-gdel="1">✕</button></div>'}).join('')||'<div class="info">グループはありません</div>'}
-function gsHtml(n,c,b){var need=b.o-b.i;return '<div class="gs"><div class="gh"><span class="dot" style="background:'+c+'"></span><b>'+esc(n)+'</b><span class="need">'+(need>=0?'入金 ':'余り ')+yen(Math.abs(need))+'</span></div><div class="gd">支出 '+yen(b.o)+' / 収入 '+yen(b.i)+'</div></div>'}
+function gsHtml(n,c,b){var need=b.o;return '<div class="gs"><div class="gh"><span class="dot" style="background:'+c+'"></span><b>'+esc(n)+'</b><span class="need">'+'入金 '+yen(need)+'</span></div><div class="gd">支出のみの合計'+(b.i?'(収入 '+yen(b.i)+' は含めません)':'')+'</div></div>'}
 function mk(y,m){return y+'-'+String(m+1).padStart(2,'0')}
 function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
 function yen(n){return '¥'+Math.round(n).toLocaleString('ja-JP')}
@@ -347,7 +360,34 @@ $('pF').addEventListener('change',function(e){if(e.target.closest('.grow'))rende
 $('fpm').onclick=function(){vm--;if(vm<0){vm=11;vy--}renderFin()};
 $('fnm').onclick=function(){vm++;if(vm>11){vm=0;vy++}renderFin()};
 
-bindOpts();renderSteps();setPhase('idle','待機中');idleView();
+/* ---------- ミニ表示 ---------- */
+var pipV=null,pipC=null,pipT=null;
+function flash(m){var t=$('toast');t.textContent=m;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},3500)}
+function pipOn(){return !!document.pictureInPictureElement||!!(pipV&&pipV.webkitPresentationMode==='picture-in-picture')}
+function drawPip(){if(!pipC)return;var c=pipC.getContext('2d'),w=pipC.width,h=pipC.height,ty=cur?cur.type:'idle';
+  var col=ty==='rest'?'#16a34a':ty==='workout'?'#f97316':'#2563eb';
+  c.fillStyle='#fff3cf';c.fillRect(0,0,w,h);c.fillStyle=col;c.fillRect(0,0,w,8);
+  c.textAlign='center';c.fillStyle='#44403c';c.font='bold 26px sans-serif';c.fillText($('phase').textContent.replace(/[\(（].*$/,''),w/2,52);
+  c.fillStyle=col;c.font='bold 78px sans-serif';c.fillText($('time').textContent,w/2,128);
+  c.font='22px sans-serif';c.fillText('🐾',24,h-12);c.fillText('🐾',w-24,h-12)}
+$('pip').onclick=function(){
+  try{
+    if(document.pictureInPictureElement){document.exitPictureInPicture();return}
+    if(pipV&&pipV.webkitPresentationMode==='picture-in-picture'){pipV.webkitSetPresentationMode('inline');return}
+    pipC=pipC||document.createElement('canvas');pipC.width=320;pipC.height=180;drawPip();
+    if(!pipV){pipV=document.createElement('video');pipV.muted=true;pipV.setAttribute('playsinline','');
+      pipV.style.cssText='position:fixed;right:0;bottom:0;width:2px;height:2px;opacity:.01;pointer-events:none';document.body.appendChild(pipV)}
+    pipV.srcObject=pipC.captureStream(10);
+    if(!pipT)pipT=setInterval(function(){if(pipOn())drawPip()},500);
+    pipV.play().then(function(){
+      if(pipV.requestPictureInPicture)return pipV.requestPictureInPicture();
+      if(pipV.webkitSetPresentationMode){pipV.webkitSetPresentationMode('picture-in-picture');return}
+      throw new Error('no')
+    }).catch(function(){flash('この端末・ブラウザではミニ表示が使えません')});
+  }catch(e){flash('この端末・ブラウザではミニ表示が使えません')}
+};
+
+bindOpts();renderSteps();setPhase('idle','🐾 待機中');idleView();
 })();
 </script>
 <script>

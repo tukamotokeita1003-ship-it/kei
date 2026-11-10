@@ -145,6 +145,12 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
 #admCode{width:100%;font:inherit;font-size:16px;padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text)}
 .rlock,.rlock body{overflow:hidden;overscroll-behavior:none}
 #runCv,#rJump{touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#nArea{position:relative;width:100%;height:320px;margin-top:8px;border-radius:12px;background:var(--bg);border:1px solid var(--line);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.nc{position:absolute;left:0;top:0;border-radius:50%;color:#fff;font-weight:800;font-size:20px;display:flex;align-items:center;justify-content:center;border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.28);cursor:pointer;touch-action:none;will-change:transform}
+.nc.hide{color:transparent}
+.nc.ok{opacity:0;transition:opacity .35s;pointer-events:none}
+.nc.ng{outline:4px solid #dc2626}
+.nc.nx{outline:4px solid #16a34a}
 #toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translate(-50%,-200%);background:var(--text);color:var(--bg);padding:14px 20px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:10;max-width:90%;text-align:center}
 #toast.show{transform:translate(-50%,0)}
 </style>
@@ -199,6 +205,17 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
         <div class="btns" style="margin-top:8px"><button class="sm" id="lkAdd">＋ 追加</button></div>
         <div class="info" id="lkMsg" style="text-align:left;min-height:16px"></div>
         <div id="lkList" style="margin-top:6px"></div></div></div>
+    <div class="card" id="bkCard">
+      <h2>💾 バックアップ</h2>
+      <div class="info" style="text-align:left">タイマー設定・学習の記録・メモ・リンク・外食・家計・ゲームの記録を、1つのファイルに保存します。機種変更やデータが消えたときの備えにしてください。</div>
+      <label class="chk"><input type="checkbox" id="bkImg" checked>画像も含める(ファイルが大きくなります)</label>
+      <div class="info" id="bkLast" style="text-align:left"></div>
+      <button id="bkMake" style="width:100%">① バックアップを作成</button>
+      <div id="bkReady" hidden style="margin-top:10px"><div class="info" id="bkInfo" style="text-align:left"></div><button id="bkSave" style="width:100%">② 📤 ファイルに保存する</button></div>
+      <button class="sec" id="bkRestore" style="width:100%;margin-top:14px">📥 バックアップから復元</button>
+      <input type="file" id="bkFile" accept=".json,application/json" hidden>
+      <div class="info" id="bkMsg" style="text-align:left;min-height:18px"></div>
+    </div>
   </div>
   <div id="pF" hidden>
     <div class="card">
@@ -239,6 +256,20 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
       <div id="gRes" hidden>
         <div id="gResMsg" style="text-align:center;font-size:17px;font-weight:700;line-height:1.6;margin:8px 0 14px"></div>
         <div class="btns"><button id="gAgain">もう一度</button><button class="sec" id="gClose">とじる</button></div>
+      </div>
+    </div>
+    <div class="card" id="numCard">
+      <h2>🔢 ミニゲーム:数字タッチ</h2>
+      <div id="nHome">
+        <div class="info" style="text-align:left">動き回る〇に書かれた数字を、3秒で覚えます。数字が消えたら、ルールの順番に〇をタッチ! 1回でも間違えると終了です。クリアするとレベルが上がり、〇の数や数字、順番のルールが変わります。</div>
+        <div class="info" id="nBest" style="text-align:left"></div>
+        <button id="nStart" style="width:100%;margin-top:10px">ゲームスタート</button>
+      </div>
+      <div id="nPlay" hidden>
+        <div class="info" id="nHead" style="text-align:left;font-weight:700"></div>
+        <div class="info" id="nRule" style="text-align:left;min-height:34px"></div>
+        <div id="nArea"></div>
+        <div class="btns" style="margin-top:10px"><button id="nNext" hidden>次のレベルへ</button><button id="nAgain" hidden>もう一度</button><button class="sec" id="nQuit">やめる</button></div>
       </div>
     </div>
     <div class="card" id="runCard">
@@ -294,7 +325,7 @@ function notify(msg){var t=$('toast');t.textContent='🐾 '+msg;t.classList.add(
 
 /* ---------- セット編集 ---------- */
 function fixIdx(oi){if(!started||!curStep)return;var j=cfg.steps.indexOf(curStep);idx=j>=0?j:Math.max(-1,oi-1)}
-function saveRec(){save('st_rec_v2',rec);save('st_act_v1',act)}
+function saveRec(){if(window.BKR)return;save('st_rec_v2',rec);save('st_act_v1',act)}
 function saveCfg(){save('st_cfg_v3',cfg)}
 function renderSteps(){
   $('steps').innerHTML=cfg.steps.map(function(st,i){
@@ -703,6 +734,120 @@ $('admCode').addEventListener('keydown',function(e){if(e.key==='Enter')$('admOk'
 $('admCancel').onclick=admShut;$('admClose').onclick=admShut;
 $('admGod').onclick=function(){admMode='god';save('st_admin_v1',admMode);admShut();renderPet()};
 $('admDef').onclick=function(){admMode='';save('st_admin_v1',admMode);admShut();renderPet()};
+
+/* ---------- 数字タッチ ---------- */
+var numS=load('st_num_v1')||{best:0,plays:0};
+var NG={phase:'idle',level:1,cs:[],exp:[],idx:0,t:0,last:0,W:0,H:320,r:26,sp:70,desc:false};
+var NCOL=['#2563eb','#16a34a','#ea580c','#9333ea','#db2777','#0891b2','#ca8a04','#475569'];
+function nCfg(L){var T=[null,[5,'seq','asc'],[5,'rand','asc'],[6,'seq','asc'],[6,'rand','asc'],[6,'rand','desc'],[7,'seq','asc'],[7,'rand','desc'],[8,'seq','asc'],[8,'rand','asc']];
+  if(L<T.length)return{n:T[L][0],k:T[L][1],o:T[L][2]};
+  var K=[['rand','asc'],['seq','desc'],['rand','desc'],['seq','asc']][(L-10)%4];
+  return{n:Math.min(12,8+Math.floor((L-8)/2)),k:K[0],o:K[1]}}
+function nVals(c){var a=[],i;
+  if(c.k==='seq'){for(i=1;i<=c.n;i++)a.push(i);return a}
+  var pool=[];for(i=10;i<=99;i++)pool.push(i);pool=shuf(pool);
+  for(i=0;i<pool.length&&a.length<c.n;i++){var v=pool[i];if(a.every(function(x){return Math.abs(x-v)>=4}))a.push(v)}
+  return a}
+function nBestUi(){$('nBest').textContent=numS.best?'最高レベル: '+numS.best+'(クリアしたレベル)':''}
+function nBuild(L){var c=nCfg(L),vals=nVals(c),W=$('nArea').clientWidth,H=NG.H,r=c.n>8?23:26,i,k;
+  $('nArea').innerHTML='';NG.cs=[];NG.W=W;NG.r=r;NG.sp=Math.min(160,60+8*L);NG.desc=c.o==='desc';
+  NG.exp=vals.slice().sort(function(a,b){return NG.desc?b-a:a-b});NG.idx=0;NG.t=0;NG.level=L;
+  vals=shuf(vals);
+  vals.forEach(function(v,n){var x,y,ok,tries=0;
+    do{x=Math.random()*(W-2*r);y=Math.random()*(H-2*r);ok=NG.cs.every(function(o){return Math.hypot(o.x-x,o.y-y)>2*r+6});tries++}while(!ok&&tries<300);
+    var a=Math.random()*Math.PI*2,sp=NG.sp*(.7+Math.random()*.6),el=document.createElement('div');
+    el.className='nc';el.textContent=v;el.dataset.i=n;el.style.width=el.style.height=(2*r)+'px';el.style.background=NCOL[Math.floor(Math.random()*NCOL.length)];
+    $('nArea').appendChild(el);NG.cs.push({v:v,x:x,y:y,vx:Math.cos(a)*sp,vy:Math.sin(a)*sp,el:el,done:false});el.style.transform='translate('+x+'px,'+y+'px)'});
+  return c}
+function nStartLevel(L){var c=nBuild(L);NG.phase='show';
+  $('nHead').textContent='レベル '+L+':〇は '+c.n+' 個';
+  $('nNext').hidden=true;$('nAgain').hidden=true;$('nQuit').textContent='やめる';nRuleUi()}
+function nOrderTxt(){return NG.desc?'大きい数字から順に':'小さい数字から順に'}
+function nRuleUi(){
+  if(NG.phase==='show')$('nRule').textContent='👀 数字を覚えて! あと '+Math.max(1,Math.ceil(3-NG.t))+' 秒 / ルール: '+nOrderTxt()+'タッチ';
+  else if(NG.phase==='answer')$('nRule').textContent='👆 '+nOrderTxt()+'タッチ!('+NG.idx+' / '+NG.exp.length+')'}
+function nStep(dt){var W=NG.W,H=NG.H,r=NG.r,D=2*r,cs=NG.cs.filter(function(c){return !c.done}),i,j;
+  cs.forEach(function(c){
+    if(Math.random()<dt*.8){var sp=Math.hypot(c.vx,c.vy)||NG.sp,a=Math.atan2(c.vy,c.vx)+(Math.random()-.5)*1.6;c.vx=Math.cos(a)*sp;c.vy=Math.sin(a)*sp}
+    c.x+=c.vx*dt;c.y+=c.vy*dt;
+    if(c.x<0){c.x=0;c.vx=Math.abs(c.vx)}if(c.x>W-D){c.x=W-D;c.vx=-Math.abs(c.vx)}
+    if(c.y<0){c.y=0;c.vy=Math.abs(c.vy)}if(c.y>H-D){c.y=H-D;c.vy=-Math.abs(c.vy)}});
+  for(i=0;i<cs.length;i++)for(j=i+1;j<cs.length;j++){var a=cs[i],b=cs[j],dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy);
+    if(d<D&&d>0){var nx=dx/d,ny=dy/d,ov=(D-d)/2;a.x-=nx*ov;a.y-=ny*ov;b.x+=nx*ov;b.y+=ny*ov;
+      var dv=(a.vx-b.vx)*nx+(a.vy-b.vy)*ny;if(dv>0){a.vx-=dv*nx;a.vy-=dv*ny;b.vx+=dv*nx;b.vy+=dv*ny}}}
+  cs.forEach(function(c){c.x=Math.min(Math.max(c.x,0),W-D);c.y=Math.min(Math.max(c.y,0),H-D);c.el.style.transform='translate('+c.x+'px,'+c.y+'px)'})}
+function nLoop(ts){requestAnimationFrame(nLoop);
+  if(NG.phase!=='show'&&NG.phase!=='answer'){NG.last=ts;return}
+  if($('pP').hidden){NG.last=ts;return}
+  var dt=Math.min(.05,(ts-NG.last)/1000||0);NG.last=ts;
+  if(NG.phase==='show'){NG.t+=dt;if(NG.t>=3){NG.phase='answer';NG.cs.forEach(function(c){c.el.classList.add('hide')})}nRuleUi()}
+  nStep(dt)}
+requestAnimationFrame(nLoop);
+function nReveal(){NG.cs.forEach(function(c){c.el.classList.remove('hide')})}
+function nClear(){NG.phase='clear';nReveal();
+  if(NG.level>numS.best){numS.best=NG.level;save('st_num_v1',numS)}
+  $('nRule').textContent='🎉 レベル '+NG.level+' クリア!';$('nNext').hidden=false;$('nQuit').textContent='やめる'}
+function nFail(c){NG.phase='over';nReveal();c.el.classList.add('ng');
+  var nx=NG.cs.filter(function(o){return !o.done&&o.v===NG.exp[NG.idx]})[0];if(nx)nx.el.classList.add('nx');
+  $('nRule').textContent='❌ ミス! レベル '+NG.level+' で終了(クリアしたレベル: '+(NG.level-1)+')。緑の枠が次に押す〇でした。';
+  $('nAgain').hidden=false;$('nNext').hidden=true;$('nQuit').textContent='とじる'}
+$('nArea').addEventListener('pointerdown',function(e){var el=e.target.closest('.nc');if(!el||NG.phase!=='answer')return;e.preventDefault();
+  var c=NG.cs[+el.dataset.i];if(!c||c.done)return;
+  if(c.v===NG.exp[NG.idx]){c.done=true;el.classList.remove('hide');el.classList.add('ok');NG.idx++;
+    if(NG.idx>=NG.exp.length)nClear();else nRuleUi()}
+  else nFail(c)});
+function nBegin(){numS.plays++;save('st_num_v1',numS);$('nHome').hidden=true;$('nPlay').hidden=false;nStartLevel(1)}
+$('nStart').onclick=nBegin;$('nAgain').onclick=function(){nStartLevel(1)};
+$('nNext').onclick=function(){nStartLevel(NG.level+1)};
+$('nQuit').onclick=function(){NG.phase='idle';$('nArea').innerHTML='';$('nPlay').hidden=true;$('nHome').hidden=false;nBestUi()};
+nBestUi();
+
+/* ---------- バックアップ ---------- */
+var bkBlob=null,bkName='',bkLast=load('st_bk_v1')||0;
+function pad2(n){return String(n).padStart(2,'0')}
+function bkMsg(m){$('bkMsg').textContent=m}
+function bkLastUi(){if(!bkLast){$('bkLast').textContent='前回のバックアップ: まだありません';return}
+  var d=new Date(bkLast),days=Math.floor((Date.now()-bkLast)/86400000);
+  $('bkLast').textContent='前回のバックアップ: '+d.getFullYear()+'/'+(d.getMonth()+1)+'/'+d.getDate()+' '+pad2(d.getHours())+':'+pad2(d.getMinutes())+(days>0?'('+days+'日前)':'(今日)')}
+function idbAll(){return idbOpen().then(function(d){return new Promise(function(res,rej){var q=d.transaction('imgs').objectStore('imgs').getAll();q.onsuccess=function(){res(q.result)};q.onerror=function(){rej(q.error)}})})}
+function idbClear(){return idbOpen().then(function(d){return new Promise(function(res,rej){var t=d.transaction('imgs','readwrite');t.objectStore('imgs').clear();t.oncomplete=function(){res()};t.onerror=function(){rej(t.error)}})})}
+function idbPut(day,blob,t){return idbOpen().then(function(d){return new Promise(function(res,rej){var x=d.transaction('imgs','readwrite');x.objectStore('imgs').add({day:day,blob:blob,t:t||Date.now()});x.oncomplete=function(){res()};x.onerror=function(){rej(x.error)}})})}
+function blobUrl(b){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result)};r.onerror=rej;r.readAsDataURL(b)})}
+$('bkMake').onclick=function(){
+  var withImg=$('bkImg').checked,data={app:'study-timer-backup',ver:1,at:new Date().toISOString(),withImg:withImg,ls:{},img:[]},i,k;
+  for(i=0;i<localStorage.length;i++){k=localStorage.key(i);if(k&&k.indexOf('st_')===0&&k!=='st_bk_v1'&&k!=='st_admin_v1')data.ls[k]=localStorage.getItem(k)}
+  bkMsg('作成中…');$('bkReady').hidden=true;
+  var p=withImg?idbAll().then(function(rows){return Promise.all(rows.map(function(r){return blobUrl(r.blob).then(function(u){data.img.push({day:r.day,t:r.t,d:u})})}))}):Promise.resolve();
+  p.then(function(){bkBlob=new Blob([JSON.stringify(data)],{type:'application/json'});var n=new Date();
+    bkName='study-timer-backup-'+n.getFullYear()+pad2(n.getMonth()+1)+pad2(n.getDate())+'-'+pad2(n.getHours())+pad2(n.getMinutes())+'.json';
+    $('bkInfo').textContent='✅ 準備できました: '+(bkBlob.size/1048576).toFixed(2)+' MB(記録 '+Object.keys(data.ls).length+' 種類'+(withImg?'、画像 '+data.img.length+' 枚':'、画像は含めません')+')';
+    $('bkReady').hidden=false;bkMsg('')})
+  .catch(function(){bkMsg('作成できませんでした')})};
+$('bkSave').onclick=function(){if(!bkBlob)return;var file=null;
+  try{file=new File([bkBlob],bkName,{type:'application/json'})}catch(e){}
+  function done(){bkLast=Date.now();save('st_bk_v1',bkLast);bkLastUi();bkMsg('保存しました。ファイルは大切に保管してください')}
+  function dl(){var a=document.createElement('a'),u=URL.createObjectURL(bkBlob);a.href=u;a.download=bkName;document.body.appendChild(a);a.click();document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u)},4000);done()}
+  if(file&&navigator.share&&navigator.canShare&&navigator.canShare({files:[file]})){
+    navigator.share({files:[file],title:'勉強タイマーのバックアップ'}).then(done,function(e){if(!e||e.name!=='AbortError')dl()})}
+  else dl()};
+function bkApply(d){var rm=[],i,k;window.BKR=true;
+  for(i=0;i<localStorage.length;i++){k=localStorage.key(i);if(k&&k.indexOf('st_')===0&&k!=='st_admin_v1'&&k!=='st_bk_v1')rm.push(k)}
+  rm.forEach(function(k){if(k==='st_imgcnt_v1'&&!d.withImg)return;localStorage.removeItem(k)});
+  Object.keys(d.ls).forEach(function(k){if(k.indexOf('st_')!==0||k==='st_admin_v1'||k==='st_bk_v1')return;if(k==='st_imgcnt_v1'&&!d.withImg)return;try{localStorage.setItem(k,d.ls[k])}catch(e){}});
+  if(!d.withImg)return Promise.resolve();
+  var cnt={};
+  return idbClear().then(function(){return (d.img||[]).reduce(function(p,im){return p.then(function(){return fetch(im.d).then(function(r){return r.blob()}).then(function(b){cnt[im.day]=(cnt[im.day]||0)+1;return idbPut(im.day,b,im.t)})})},Promise.resolve())})
+    .then(function(){localStorage.setItem('st_imgcnt_v1',JSON.stringify(cnt))})}
+$('bkRestore').onclick=function(){$('bkFile').click()};
+$('bkFile').onchange=function(){var f=this.files[0];this.value='';if(!f)return;var r=new FileReader();
+  r.onload=function(){var d;try{d=JSON.parse(r.result)}catch(e){bkMsg('ファイルを読み込めませんでした');return}
+    if(!d||d.app!=='study-timer-backup'||!d.ls){bkMsg('このアプリのバックアップファイルではありません');return}
+    var w=d.at?new Date(d.at):null,ws=w?w.getFullYear()+'/'+(w.getMonth()+1)+'/'+w.getDate()+' '+pad2(w.getHours())+':'+pad2(w.getMinutes()):'不明';
+    if(!confirm('バックアップ('+ws+' 作成)から復元します。\n今の記録は上書きされます。よろしいですか?'))return;
+    bkMsg('復元中…');
+    bkApply(d).then(function(){alert('復元しました。アプリを再読み込みします。');location.reload()},function(){window.BKR=false;bkMsg('復元できませんでした')})};
+  r.readAsText(f)};
+bkLastUi();
 
 bindOpts();renderSteps();setPhase('idle','🐾 待機中');idleView();
 })();

@@ -151,6 +151,8 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
 .nc.ok{opacity:0;transition:opacity .35s;pointer-events:none}
 .nc.ng{outline:4px solid #dc2626}
 .nc.nx{outline:4px solid #16a34a}
+.acc{display:flex;justify-content:space-between;align-items:center;width:100%;flex:none;background:transparent;color:var(--text);font-size:16px;font-weight:700;padding:4px 2px;border-radius:8px;text-align:left}
+.acc .arr{display:inline-block;transition:transform .2s;color:var(--sub)}
 #toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translate(-50%,-200%);background:var(--text);color:var(--bg);padding:14px 20px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:10;max-width:90%;text-align:center}
 #toast.show{transform:translate(-50%,0)}
 </style>
@@ -205,7 +207,10 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
         <div class="btns" style="margin-top:8px"><button class="sm" id="lkAdd">＋ 追加</button></div>
         <div class="info" id="lkMsg" style="text-align:left;min-height:16px"></div>
         <div id="lkList" style="margin-top:6px"></div></div></div>
-    <div class="card" id="bkCard">
+    <div class="card" id="setCard">
+      <button class="acc" id="setHead" aria-expanded="false" aria-controls="setBody"><span>⚙️ 設定</span><span class="arr">▸</span></button>
+      <div id="setBody" hidden>
+      <div id="bkBox" style="margin-top:14px;padding-top:14px;border-top:1px solid var(--line)">
       <h2>💾 バックアップ</h2>
       <div class="info" style="text-align:left">タイマー設定・学習の記録・メモ・リンク・外食・家計・ゲームの記録を、1つのファイルに保存します。機種変更やデータが消えたときの備えにしてください。</div>
       <label class="chk"><input type="checkbox" id="bkImg" checked>画像も含める(ファイルが大きくなります)</label>
@@ -215,6 +220,7 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
       <button class="sec" id="bkRestore" style="width:100%;margin-top:14px">📥 バックアップから復元</button>
       <input type="file" id="bkFile" accept=".json,application/json" hidden>
       <div class="info" id="bkMsg" style="text-align:left;min-height:18px"></div>
+      </div></div>
     </div>
   </div>
   <div id="pF" hidden>
@@ -847,6 +853,7 @@ $('bkFile').onchange=function(){var f=this.files[0];this.value='';if(!f)return;v
     bkMsg('復元中…');
     bkApply(d).then(function(){alert('復元しました。アプリを再読み込みします。');location.reload()},function(){window.BKR=false;bkMsg('復元できませんでした')})};
   r.readAsText(f)};
+$('setHead').onclick=function(){var open=$('setBody').hidden;$('setBody').hidden=!open;this.setAttribute('aria-expanded',open?'true':'false');this.querySelector('.arr').style.transform=open?'rotate(90deg)':''};
 bkLastUi();
 
 bindOpts();renderSteps();setPhase('idle','🐾 待機中');idleView();

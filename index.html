@@ -270,6 +270,7 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
         <div class="info" style="text-align:left">動き回る〇に書かれた数字を、3秒で覚えます。数字が消えたら、ルールの順番に〇をタッチ! 1回でも間違えると終了です。クリアするとレベルが上がり、〇の数や数字、順番のルールが変わります。</div>
         <div class="info" id="nBest" style="text-align:left"></div>
         <button id="nStart" style="width:100%;margin-top:10px">ゲームスタート</button>
+        <button class="sec sm" id="nReset" hidden style="width:100%;margin-top:8px">レベル1からやり直す</button>
       </div>
       <div id="nPlay" hidden>
         <div class="info" id="nHead" style="text-align:left;font-weight:700"></div>
@@ -325,7 +326,8 @@ function beep(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAu
   [0,.25,.5].forEach(function(t){var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.frequency.value=880;
   o.connect(g);g.connect(audioCtx.destination);g.gain.setValueAtTime(.2,audioCtx.currentTime+t);
   g.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+t+.2);o.start(audioCtx.currentTime+t);o.stop(audioCtx.currentTime+t+.2)})}catch(e){}}
-function notify(msg){var t=$('toast');t.textContent='🐾 '+msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},5000);beep();
+var NQ=null;
+function notify(msg){if(NQ){NQ.push(msg);return}var t=$('toast');t.textContent='🐾 '+msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show')},5000);beep();
   try{if(navigator.vibrate)navigator.vibrate([200,100,200])}catch(e){}
   try{if('Notification' in window&&Notification.permission==='granted')new Notification('勉強タイマー',{body:msg})}catch(e){}}
 
@@ -361,7 +363,7 @@ function updLong(){$('longRow').style.opacity=cfg.longOn?1:.35;['longN','longM',
 
 /* ---------- タイマー本体 ---------- */
 function setPhase(type,label){$('phase').textContent=label;var c=type==='rest'?' rest':type==='workout'?' workout':'';$('phase').className='phase'+c;$('bar').className='bar'+c}
-function startCur(type,ms,isLong,label){cur={type:type,long:isLong};total=ms;endAt=Date.now()+ms;lastT=Date.now();setPhase(type,label);renderSteps();render()}
+function startCur(type,ms,isLong,label){var now=Date.now(),base=(cur&&running&&endAt<=now)?endAt:now;cur={type:type,long:isLong};total=ms;endAt=base+ms;lastT=base;setPhase(type,label);renderSteps();render();saveTimer()}
 function runStep(n){idx=n;var st=cfg.steps[n];curStep=st;
   startCur(st.t,dur(st.m,st.s),false,(st.t==='study'?'📖 勉強中':st.t==='workout'?'🐕 筋トレ中':'🦴 休憩中')+'(ステップ '+(n+1)+'/'+cfg.steps.length+')')}
 function nextAfter(n,long){
@@ -379,7 +381,7 @@ function finish(){
   var next=n>=cfg.steps.length?(cfg.repeat?0:-1):n;
   if(long)notify('勉強'+studyDone+'回達成!長い休憩です('+longD(dur(cfg.longM,cfg.longS)/1000)+')');
   else if(next<0)notify('すべて終了!お疲れさまでした。');
-  else{var s=cfg.steps[next];notify((s.t==='rest'?'休憩の時間です(':s.t==='workout'?'筋トレを始めましょう(':'勉強を始めましょう(')+longD(dur(s.m,s.s)/1000)+')')}
+  else notify(stepMsg(cfg.steps[next]));
   nextAfter(n,long);
 }
 function addRec(){var now=Date.now();if(cur&&(cur.type==='study'||cur.type==='workout')&&lastT){var up=Math.min(now,endAt),d=(up-lastT)/1000;
@@ -389,8 +391,11 @@ function render(){var left=endAt-Date.now();$('time').textContent=fmt(left);
   $('fill').style.width=Math.min(100,Math.max(0,(1-left/total)*100))+'%';
   document.title=(running?fmt(left)+' ':'')+'勉強タイマー';
   $('info').textContent='今日の学習: '+longD(rec[dayKey()]||0)+'/勉強回数: '+studyDone}
-function loop(){if(!running)return;addRec();render();if(endAt-Date.now()<=0)finish()}
-function stopAll(done){running=false;started=false;clearInterval(tick);addRec();saveRec();cur=null;
+function loop(){if(!running)return;addRec();render();var now=Date.now();if(endAt>now)return;
+  if(now-endAt>14400000){stopAll(false);notify('長い時間が過ぎたため、タイマーを止めました');return}
+  NQ=[];var g=0;while(running&&endAt<=Date.now()&&g<60){finish();g++}
+  var q=NQ;NQ=null;if(g>0){saveRec();saveTimer()}if(q.length)notify(q[q.length-1])}
+function stopAll(done){running=false;started=false;clearInterval(tick);addRec();saveRec();cur=null;saveTimer();
   setPhase('idle','🐾 待機中');$('fill').style.width='0';$('start').textContent='開始';$('fs').disabled=false;
   document.title='勉強タイマー';renderSteps();idleView();if(done)$('info').textContent='完了!今日の学習: '+longD(rec[dayKey()]||0)}
 $('start').onclick=function(){
@@ -399,8 +404,9 @@ $('start').onclick=function(){
     try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();audioCtx.resume()}catch(e){}
     running=true;$('fs').disabled=true;
     if(!started){started=true;studyDone=0;runStep(0)}else{endAt=Date.now()+remainMs;lastT=Date.now()}
-    $('start').textContent='一時停止';tick=setInterval(loop,250);
-  }else{addRec();running=false;clearInterval(tick);remainMs=endAt-Date.now();saveRec();$('start').textContent='再開';$('fs').disabled=false}
+    $('start').textContent='一時停止';tick=setInterval(loop,250);saveTimer();
+    if(LN)LN.requestPermissions().catch(function(){});
+  }else{addRec();running=false;clearInterval(tick);remainMs=endAt-Date.now();saveRec();$('start').textContent='再開';$('fs').disabled=false;saveTimer()}
 };
 $('skip').onclick=function(){if(started){addRec();if(!running){running=true;$('fs').disabled=true;tick=setInterval(loop,250);$('start').textContent='一時停止'}endAt=Date.now();finish()}};
 $('reset').onclick=function(){stopAll(false)};
@@ -754,7 +760,7 @@ function nVals(c){var a=[],i;
   var pool=[];for(i=10;i<=99;i++)pool.push(i);pool=shuf(pool);
   for(i=0;i<pool.length&&a.length<c.n;i++){var v=pool[i];if(a.every(function(x){return Math.abs(x-v)>=4}))a.push(v)}
   return a}
-function nBestUi(){$('nBest').textContent=numS.best?'最高レベル: '+numS.best+'(クリアしたレベル)':''}
+function nBestUi(){var c=numS.cur||1;$('nBest').textContent=(numS.best?'最高レベル: '+numS.best+'(クリア済み)':'')+(c>1?(numS.best?' / ':'')+'次に挑戦: レベル '+c:'');$('nStart').textContent='ゲームスタート(レベル '+c+' から)';$('nReset').hidden=c<=1}
 function nBuild(L){var c=nCfg(L),vals=nVals(c),W=$('nArea').clientWidth,H=NG.H,r=c.n>8?23:26,i,k;
   $('nArea').innerHTML='';NG.cs=[];NG.W=W;NG.r=r;NG.sp=Math.min(160,60+8*L);NG.desc=c.o==='desc';
   NG.exp=vals.slice().sort(function(a,b){return NG.desc?b-a:a-b});NG.idx=0;NG.t=0;NG.level=L;
@@ -791,19 +797,20 @@ function nLoop(ts){requestAnimationFrame(nLoop);
 requestAnimationFrame(nLoop);
 function nReveal(){NG.cs.forEach(function(c){c.el.classList.remove('hide')})}
 function nClear(){NG.phase='clear';nReveal();
-  if(NG.level>numS.best){numS.best=NG.level;save('st_num_v1',numS)}
+  if(NG.level>numS.best)numS.best=NG.level;numS.cur=NG.level+1;save('st_num_v1',numS);
   $('nRule').textContent='🎉 レベル '+NG.level+' クリア!';$('nNext').hidden=false;$('nQuit').textContent='やめる'}
 function nFail(c){NG.phase='over';nReveal();c.el.classList.add('ng');
   var nx=NG.cs.filter(function(o){return !o.done&&o.v===NG.exp[NG.idx]})[0];if(nx)nx.el.classList.add('nx');
-  $('nRule').textContent='❌ ミス! レベル '+NG.level+' で終了(クリアしたレベル: '+(NG.level-1)+')。緑の枠が次に押す〇でした。';
-  $('nAgain').hidden=false;$('nNext').hidden=true;$('nQuit').textContent='とじる'}
+  $('nRule').textContent='❌ ミス! 緑の枠が、次に押す〇でした。「もう一度」で、同じレベル '+NG.level+' に再挑戦できます。';
+  $('nAgain').textContent='もう一度(レベル '+NG.level+')';$('nAgain').hidden=false;$('nNext').hidden=true;$('nQuit').textContent='とじる'}
 $('nArea').addEventListener('pointerdown',function(e){var el=e.target.closest('.nc');if(!el||NG.phase!=='answer')return;e.preventDefault();
   var c=NG.cs[+el.dataset.i];if(!c||c.done)return;
   if(c.v===NG.exp[NG.idx]){c.done=true;el.classList.remove('hide');el.classList.add('ok');NG.idx++;
     if(NG.idx>=NG.exp.length)nClear();else nRuleUi()}
   else nFail(c)});
-function nBegin(){numS.plays++;save('st_num_v1',numS);$('nHome').hidden=true;$('nPlay').hidden=false;nStartLevel(1)}
-$('nStart').onclick=nBegin;$('nAgain').onclick=function(){nStartLevel(1)};
+function nBegin(){numS.plays++;save('st_num_v1',numS);$('nHome').hidden=true;$('nPlay').hidden=false;nStartLevel(numS.cur||1)}
+$('nStart').onclick=nBegin;$('nAgain').onclick=function(){nStartLevel(NG.level)};
+$('nReset').onclick=function(){numS.cur=1;save('st_num_v1',numS);nBestUi()};
 $('nNext').onclick=function(){nStartLevel(NG.level+1)};
 $('nQuit').onclick=function(){NG.phase='idle';$('nArea').innerHTML='';$('nPlay').hidden=true;$('nHome').hidden=false;nBestUi()};
 nBestUi();
@@ -821,7 +828,7 @@ function idbPut(day,blob,t){return idbOpen().then(function(d){return new Promise
 function blobUrl(b){return new Promise(function(res,rej){var r=new FileReader();r.onload=function(){res(r.result)};r.onerror=rej;r.readAsDataURL(b)})}
 $('bkMake').onclick=function(){
   var withImg=$('bkImg').checked,data={app:'study-timer-backup',ver:1,at:new Date().toISOString(),withImg:withImg,ls:{},img:[]},i,k;
-  for(i=0;i<localStorage.length;i++){k=localStorage.key(i);if(k&&k.indexOf('st_')===0&&k!=='st_bk_v1'&&k!=='st_admin_v1')data.ls[k]=localStorage.getItem(k)}
+  for(i=0;i<localStorage.length;i++){k=localStorage.key(i);if(k&&k.indexOf('st_')===0&&k!=='st_bk_v1'&&k!=='st_admin_v1'&&k!=='st_timer_v1')data.ls[k]=localStorage.getItem(k)}
   bkMsg('作成中…');$('bkReady').hidden=true;
   var p=withImg?idbAll().then(function(rows){return Promise.all(rows.map(function(r){return blobUrl(r.blob).then(function(u){data.img.push({day:r.day,t:r.t,d:u})})}))}):Promise.resolve();
   p.then(function(){bkBlob=new Blob([JSON.stringify(data)],{type:'application/json'});var n=new Date();
@@ -856,7 +863,43 @@ $('bkFile').onchange=function(){var f=this.files[0];this.value='';if(!f)return;v
 $('setHead').onclick=function(){var open=$('setBody').hidden;$('setBody').hidden=!open;this.setAttribute('aria-expanded',open?'true':'false');this.querySelector('.arr').style.transform=open?'rotate(90deg)':''};
 bkLastUi();
 
-bindOpts();renderSteps();setPhase('idle','🐾 待機中');idleView();
+/* ---------- タイマーの補助(遅れの取り戻し・状態の保存・ネイティブ通知) ---------- */
+function stepMsg(s){return (s.t==='rest'?'休憩の時間です(':s.t==='workout'?'筋トレを始めましょう(':'勉強を始めましょう(')+longD(dur(s.m,s.s)/1000)+')'}
+function planFuture(maxN){var out=[],t=endAt,L=cfg.steps.length,k,
+  st={long:!!cur.long,type:cur.type,idx:idx,sd:studyDone,pend:cur.long?(pendStep?cfg.steps.indexOf(pendStep):-1):0};
+  for(k=0;k<maxN;k++){var msg,n,long=false,sd=st.sd;
+    if(st.long){msg='長い休憩終了!';n=st.pend<0?L:st.pend}
+    else{n=st.idx+1;
+      if(st.type==='study'){sd++;if(cfg.longOn&&cfg.longN>0&&sd%cfg.longN===0){long=true;if(n<L&&cfg.steps[n].t==='rest')n++}}
+      var next=n>=L?(cfg.repeat?0:-1):n;
+      msg=long?'勉強'+sd+'回達成!長い休憩です('+longD(dur(cfg.longM,cfg.longS)/1000)+')':next<0?'すべて終了!お疲れさまでした。':stepMsg(cfg.steps[next])}
+    out.push({at:t,msg:msg});
+    if(n>=L)n=cfg.repeat?0:-1;
+    if(long){st={long:true,type:'rest',idx:st.idx,sd:sd,pend:n};t+=dur(cfg.longM,cfg.longS);continue}
+    if(n<0)break;
+    st={long:false,type:cfg.steps[n].t,idx:n,sd:sd,pend:0};t+=dur(cfg.steps[n].m,cfg.steps[n].s)}
+  return out}
+function saveTimer(){if(window.BKR)return;
+  if(!started||!cur){save('st_timer_v1',{started:false});return}
+  save('st_timer_v1',{started:true,running:running,idx:idx,type:cur.type,long:!!cur.long,sd:studyDone,pend:pendStep?cfg.steps.indexOf(pendStep):-1,endAt:endAt,total:total,lastT:lastT,remainMs:remainMs,label:$('phase').textContent})}
+function restoreTimer(){var s=load('st_timer_v1');if(!s||!s.started)return;
+  started=true;idx=s.idx;studyDone=s.sd;cur={type:s.type,long:s.long};curStep=cfg.steps[idx]||null;pendStep=s.pend>=0?(cfg.steps[s.pend]||null):null;pending=s.pend;
+  total=s.total;endAt=s.endAt;lastT=s.lastT;remainMs=s.remainMs;
+  setPhase(s.type,s.label);renderSteps();render();
+  if(s.running){running=true;$('fs').disabled=true;$('start').textContent='一時停止';tick=setInterval(loop,250);loop()}
+  else{running=false;$('start').textContent='再開'}}
+var LN=(window.Capacitor&&Capacitor.Plugins&&Capacitor.Plugins.LocalNotifications)||null;
+function nativeCancel(){if(!LN)return Promise.resolve();
+  return LN.getPending().then(function(r){if(r&&r.notifications&&r.notifications.length)return LN.cancel({notifications:r.notifications})}).catch(function(){})}
+function nativeSched(){if(!LN||!running||!cur)return;
+  var pl=planFuture(40).filter(function(p){return p.at>Date.now()+1000});
+  nativeCancel().then(function(){if(!pl.length)return;
+    return LN.schedule({notifications:pl.map(function(p,i){return{id:100+i,title:'勉強タイマー',body:p.msg,schedule:{at:new Date(p.at),allowWhileIdle:true}}})})}).catch(function(){})}
+document.addEventListener('visibilitychange',function(){
+  if(document.hidden){saveTimer();if(LN&&running)nativeSched()}
+  else{if(LN)nativeCancel();if(running)loop()}});
+
+bindOpts();renderSteps();setPhase('idle','🐾 待機中');idleView();restoreTimer();
 })();
 </script>
 <script>

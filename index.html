@@ -158,6 +158,9 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
 .jr .jd{flex:1 1 140px}.jr .je{flex:1 1 110px}.jr .jn{flex:1 1 100%}
 .jr .x{flex:0 0 32px}
 .jr .res{flex:1 1 100%;font-size:13px;color:var(--sub);text-align:right}
+.fr .fx{flex:0 0 auto;display:flex;align-items:center;gap:6px;font-size:14px;padding:4px 6px;color:var(--text)}
+.fr .fx input{width:20px;height:20px;margin:0;padding:0;accent-color:#2563eb}
+.fr.out .res{flex:1 1 30%}
 #toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translate(-50%,-200%);background:var(--text);color:var(--bg);padding:14px 20px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:10;max-width:90%;text-align:center}
 #toast.show{transform:translate(-50%,0)}
 </style>
@@ -238,12 +241,12 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
     <div class="card"><h2>💴 収入(お小遣い・支援・給料など)</h2><div id="fin_in_l"></div><button class="sec sm" style="width:100%" data-add="in">＋ 収入を追加</button></div>
     <div class="card"><h2>💼 バイト代(日ごと)</h2><div id="job_l"></div><button class="sec sm" style="width:100%" id="jobAdd">＋ バイト代を追加</button>
       <div class="info" id="jobTot" style="text-align:left"></div>
-      <div class="info" style="text-align:left">日付ごとに入力します。金額は、計算式も使えます(例: 1100*5.5)。合計は、上の「収入」に入ります。</div></div>
+      <div class="info" style="text-align:left">日付ごとに入力します。金額は、計算式も使えます(例: 1100*5.5)。合計は、上の「収入」に入ります。日付を変えたときは、入力が終わって、他の場所をタップすると、日付順に並び替わります。</div></div>
     <div class="card"><h2>💳 支出(カード・現金・固定費など)</h2><div id="fin_out_l"></div><button class="sec sm" style="width:100%" data-add="out">＋ 支出を追加</button></div>
     <div class="card"><h2>🎨 グループの設定</h2><div id="grpList"></div><button class="sec sm" style="width:100%" data-gadd="1">＋ グループを追加</button>
       <div class="info">色の丸をタップすると色が変わります。名前は銀行名などに自由に変えられます。</div></div>
-    <div class="card"><button class="sec sm" id="fcopy" style="width:100%">先月の項目をコピー</button>
-      <div class="info">金額欄は計算式が使えます(例: 12800/2 なら自分の分だけ)。「÷2」ボタンでも割れます。項目名は一度入力すると候補に出ます。</div></div>
+    <div class="card"><button class="sec sm" id="fcopy" style="width:100%">先月の支出項目をコピー</button>
+      <div class="info">金額欄は計算式が使えます(例: 12800/2 なら自分の分だけ)。「÷2」ボタンでも割れます。項目名は一度入力すると候補に出ます。<br>「先月の支出項目をコピー」は、収入はコピーしません。「固定費」にチェックした項目は、金額も一緒に、それ以外は項目名だけ(金額は0)コピーします。</div></div>
     <datalist id="fnames"></datalist>
   </div>
   <div id="pP" hidden>
@@ -470,7 +473,7 @@ function finTotals(key){var i=0,o=0;(fin[key]||[]).forEach(function(x){if(x.k===
 function resText(x){var a=calc(x.e);return isNaN(a)?'⚠ 式が読み取れません':'= '+yen(a)}
 function rowHtml(x,i){var gc=x.k==='out'?gcol(x.g):'';return '<div class="fr '+x.k+'" data-i="'+i+'"'+(gc?' style="border-left-color:'+gc+'"':'')+'><input type="text" class="nm" list="fnames" placeholder="項目名(例: 家族カード)" value="'+esc(x.n)+'">'+
   (x.k==='out'?'<select class="gsel"><option value="">グループなし</option>'+groups.map(function(g){return '<option value="'+g.id+'"'+(x.g===g.id?' selected':'')+'>'+esc(g.n||'(名前なし)')+'</option>'}).join('')+'</select>':'')+
-  '<input type="text" class="ex" placeholder="金額 例: 12800/2" value="'+esc(x.e)+'"><button class="mv" data-half="1">÷2</button><button class="x" data-del="1">✕</button><div class="res">'+resText(x)+'</div></div>'}
+  '<input type="text" class="ex" placeholder="金額 例: 12800/2" value="'+esc(x.e)+'"><button class="mv" data-half="1">÷2</button><button class="x" data-del="1">✕</button>'+(x.k==='out'?'<label class="fx"><input type="checkbox" class="fxc"'+(x.f?' checked':'')+'>固定費</label>':'')+'<div class="res">'+resText(x)+'</div></div>'}
 function finSum(){var key=mk(vy,vm),t=finTotals(key);$('s_in').textContent=yen(t.i);$('s_out').textContent=yen(t.o);
   var b=t.i-t.o;$('s_bal').textContent=yen(b);$('s_bal').style.color=b<0?'#dc2626':'';
   var m={},none={i:0,o:0},h='';
@@ -490,6 +493,7 @@ function finSave(){save('st_fin_v1',fin)}
 $('pF').addEventListener('input',function(e){var gr=e.target.closest('.grow');if(gr){groups[+gr.dataset.gi].n=e.target.value;grpSave();return}
   var row=e.target.closest('.fr');if(!row)return;
   var x=fin[mk(vy,vm)][+row.dataset.i];
+  if(e.target.classList.contains('fxc')){x.f=e.target.checked;finSave();return}
   if(e.target.classList.contains('gsel')){x.g=e.target.value;row.style.borderLeftColor=gcol(x.g);finSum();finSave();return}
   if(e.target.classList.contains('nm'))x.n=e.target.value;
   else{x.e=e.target.value;x.a=calc(x.e)||0;row.querySelector('.res').textContent=resText(x);finSum()}
@@ -506,10 +510,10 @@ $('pF').addEventListener('click',function(e){var t=e.target,key=mk(vy,vm),d=t.da
   if(row&&d.half){var x=fin[key][+row.dataset.i],ex=(x.e||'').trim();if(!ex)return;
     x.e=/[+\-*\/×÷]/.test(ex)?'('+ex+')/2':ex+'/2';x.a=calc(x.e)||0;
     row.querySelector('.ex').value=x.e;row.querySelector('.res').textContent=resText(x);finSum();finSave();return}
-  if(t.id==='fcopy'){var pk=vm===0?mk(vy-1,11):mk(vy,vm-1),src=fin[pk]||[];
-    if(!src.length){alert('先月のデータがありません');return}
-    if((fin[key]||[]).length&&!confirm('今月の項目に、先月の項目を追加しますか?'))return;
-    fin[key]=(fin[key]||[]).concat(src.map(function(x){return{k:x.k,n:x.n,e:x.e,a:x.a,g:x.g||''}}));finSave();renderFin()}
+  if(t.id==='fcopy'){var pk=vm===0?mk(vy-1,11):mk(vy,vm-1),src=(fin[pk]||[]).filter(function(x){return x.k==='out'});
+    if(!src.length){alert('先月に、コピーできる支出の項目がありません');return}
+    if((fin[key]||[]).length&&!confirm('今月の項目に、先月の支出の項目を追加しますか?\n(固定費は金額も、それ以外は項目名だけコピーします)'))return;
+    fin[key]=(fin[key]||[]).concat(src.map(function(x){return x.f?{k:'out',n:x.n,e:x.e,a:x.a,g:x.g||'',f:true}:{k:'out',n:x.n,e:'',a:0,g:x.g||'',f:false}}));finSave();renderFin()}
 });
 $('pF').addEventListener('change',function(e){if(e.target.closest('.grow'))renderFin()});
 $('fpm').onclick=function(){vm--;if(vm<0){vm=11;vy--}renderFin()};
@@ -911,7 +915,7 @@ document.addEventListener('visibilitychange',function(){
   else{if(LN)nativeCancel();if(running)loop()}});
 
 /* ---------- バイト代(日ごと) ---------- */
-var jobs=load('st_job_v1')||[];
+var jobs=load('st_job_v1')||[],jdDirty=false;
 function jobSave(){save('st_job_v1',jobs)}
 function jobsOf(key){return jobs.filter(function(j){return j.d&&j.d.slice(0,7)===key}).sort(function(a,b){return a.d<b.d?-1:a.d>b.d?1:a.t-b.t})}
 function jobSum(key){var s=0;jobsOf(key).forEach(function(j){s+=j.a||0});return s}
@@ -931,9 +935,11 @@ $('jobAdd').onclick=function(){var key=mk(vy,vm),today=dayKey(),d=today.slice(0,
 $('job_l').addEventListener('input',function(e){var row=e.target.closest('.jr');if(!row)return;var j=jobById(row);if(!j)return;
   if(e.target.classList.contains('je')){j.e=e.target.value;j.a=calc(j.e)||0;row.querySelector('.res').textContent=resText(j);finSum()}
   else if(e.target.classList.contains('jn'))j.n=e.target.value;
-  else if(e.target.classList.contains('jd')&&e.target.value)j.d=e.target.value;
+  else if(e.target.classList.contains('jd')&&e.target.value){j.d=e.target.value;jdDirty=true;finSum()}
   jobSave()});
-$('job_l').addEventListener('change',function(e){if(e.target.classList.contains('jd'))renderFin()});
+$('job_l').addEventListener('focusout',function(e){if(!e.target.classList.contains('jd')||!jdDirty)return;
+  setTimeout(function(){if(!jdDirty)return;var a=document.activeElement;if(a&&$('job_l').contains(a)&&a.tagName==='INPUT')return;jdDirty=false;renderFin()},250)});
+$('job_l').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.classList.contains('jd'))e.target.blur()});
 $('job_l').addEventListener('click',function(e){var row=e.target.closest('.jr');if(!row||!e.target.dataset.jdel)return;var j=jobById(row);if(!j)return;
   jobs.splice(jobs.indexOf(j),1);jobSave();renderFin()});
 

@@ -161,6 +161,25 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
 .fr .fx{flex:0 0 auto;display:flex;align-items:center;gap:6px;font-size:14px;padding:4px 6px;color:var(--text)}
 .fr .fx input{width:20px;height:20px;margin:0;padding:0;accent-color:#2563eb}
 .fr.out .res{flex:1 1 30%}
+#shView{position:fixed;inset:0;z-index:35;background:var(--bg);display:flex;flex-direction:column;gap:8px;padding:calc(10px + env(safe-area-inset-top,0px)) 12px calc(10px + env(safe-area-inset-bottom,0px))}
+#shView[hidden]{display:none}
+#shCtl[hidden],#shBar[hidden]{display:none}
+#shWrap{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:flex-start}
+#shCard{--u:1;font-size:calc(15px*var(--u));line-height:1.35;background:var(--card);border-radius:14px;padding:.8em .9em;box-shadow:0 2px 12px rgba(0,0,0,.08);overflow:hidden}
+.chip{display:inline-flex;align-items:center;gap:6px;flex:none;padding:6px 12px;margin:0 6px 6px 0;border-radius:999px;border:2px solid var(--line);background:var(--bg);color:var(--text);font-size:14px;font-weight:600;opacity:.5}
+.chip.on{opacity:1;border-color:var(--study)}
+.sh-t{font-weight:800;font-size:1.15em;text-align:center;margin-bottom:.5em}
+.sh-g{border-left:5px solid #999;border-radius:6px;padding:.3em .6em;margin-bottom:.5em;background:var(--bg)}
+.sh-gh{display:flex;align-items:center;gap:.5em;font-size:1.1em;margin-bottom:.2em}
+.sh-gt{margin-left:auto;font-weight:800}
+.sh-r{display:flex;justify-content:space-between;gap:10px;padding:.2em 0 .2em .5em;border-bottom:1px dashed var(--line);cursor:pointer}
+.sh-r:last-child{border-bottom:0}
+.sh-r.off{opacity:.35;text-decoration:line-through}
+.sh-sum{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--text);padding-top:.4em;margin-top:.3em;font-size:1.2em}
+.sh-sum b{font-size:1.4em}
+.gs .eye{flex:0 0 auto;padding:2px 8px;font-size:18px;background:transparent;color:var(--text);border-radius:8px;margin-left:4px}
+.gs.off{opacity:.5}
+.gs.off .need{text-decoration:line-through}
 #toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translate(-50%,-200%);background:var(--text);color:var(--bg);padding:14px 20px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:10;max-width:90%;text-align:center}
 #toast.show{transform:translate(-50%,0)}
 </style>
@@ -236,8 +255,12 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
       <div class="mh"><button class="sec" id="fpm">◀</button><span id="fmt"></span><button class="sec" id="fnm">▶</button></div>
       <div class="sum"><div><small>収入</small><b id="s_in"></b></div><div><small>支出</small><b id="s_out"></b></div><div><small>収支</small><b id="s_bal"></b></div></div>
       <div class="info" id="jobSum"></div>
+      <div class="info" id="offNote" style="color:#b45309;font-weight:700"></div>
     </div>
-    <div class="card"><h2>🏦 グループ別の入金額(支出のみ)</h2><div id="grpSum"></div></div>
+    <div class="card"><h2>🏦 グループ別の入金額(支出のみ)</h2>
+      <div class="info" style="text-align:left;line-height:1.5;margin-bottom:8px">各グループの右の「👁」をタップすると、そのグループを一時的に非表示にして、上の支出・収支の合計から引きます(給与が入る口座の引き落としを除きたいときなど)。</div>
+      <div id="grpSum"></div>
+      <button class="sec sm" id="shOpen" style="width:100%;margin-top:6px">📸 共有用の画面(選んだ項目だけ表示)</button></div>
     <div class="card"><h2>💴 収入(お小遣い・支援・給料など)</h2><div id="fin_in_l"></div><button class="sec sm" style="width:100%" data-add="in">＋ 収入を追加</button></div>
     <div class="card"><h2>💼 バイト代(日ごと)</h2><div id="job_l"></div><button class="sec sm" style="width:100%" id="jobAdd">＋ バイト代を追加</button>
       <div class="info" id="jobTot" style="text-align:left"></div>
@@ -301,6 +324,13 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
     <div class="card"><div class="info" style="text-align:left;line-height:1.7">【わんこのランク(すべて直近24時間の記録)】<br>🐶 元気: 勉強+筋トレ10分 または 英単語クイズ10問以上正解<br>👑 王様: 勉強+筋トレ20分、または 10分+英単語クイズ10問以上正解<br>※休憩の時間は数えません。</div></div>
     <div id="adm" style="width:56px;height:56px;margin:0 6px 12px auto;background:var(--pawbig) center/38px no-repeat;transform:rotate(22deg)"></div>
   </div>
+</div>
+<div id="shView" hidden>
+  <div id="shCtl"><div style="font-weight:700;margin:6px 0">📸 共有用の画面</div>
+    <div class="info" style="text-align:left;line-height:1.5">表示するグループを選びます。項目をタップすると、一時的に非表示になります(もう一度タップで戻ります)。「スクショ用に表示」で、下の枠だけを表示します(画面をタップすると戻ります)。</div>
+    <div id="shChips" style="margin-top:6px"></div></div>
+  <div id="shWrap"><div id="shCard"></div></div>
+  <div id="shBar" class="btns"><button class="sec" id="shReset">すべて表示</button><button id="shShot">スクショ用に表示</button><button class="sec" id="shClose">とじる</button></div>
 </div>
 <div id="imgView" hidden><img id="imgBig" alt=""><div class="btns"><button class="sec" id="imgDel">🗑 削除</button><button id="imgClose">とじる</button></div></div>
 <div id="admView" hidden><div class="card" style="width:min(360px,92vw);margin:0">
@@ -460,7 +490,7 @@ function grpSave(){save('st_grp_v1',groups)}
 function gfind(id){for(var i=0;i<groups.length;i++)if(groups[i].id===id)return groups[i];return null}
 function gcol(id){var g=gfind(id);return g?PAL[g.c%PAL.length]:''}
 function renderGroups(){$('grpList').innerHTML=groups.map(function(g,i){return '<div class="grow" data-gi="'+i+'"><button class="gdot" data-gc="1" style="background:'+PAL[g.c%PAL.length]+'"></button><input type="text" class="gname" placeholder="グループ名(例: A銀行)" value="'+esc(g.n)+'"><button class="x" data-gdel="1">✕</button></div>'}).join('')||'<div class="info">グループはありません</div>'}
-function gsHtml(n,c,b){var need=b.o;return '<div class="gs"><div class="gh"><span class="dot" style="background:'+c+'"></span><b>'+esc(n)+'</b><span class="need">'+'入金 '+yen(need)+'</span></div><div class="gd">支出のみの合計</div></div>'}
+function gsHtml(n,c,b,id,off){return '<div class="gs'+(off?' off':'')+'" data-gid="'+esc(id)+'"><div class="gh"><span class="dot" style="background:'+c+'"></span><b>'+esc(n)+'</b><span class="need">入金 '+yen(b.o)+'</span><button class="eye" data-eye="1" aria-label="'+(off?'表示に戻す':'非表示にする')+'">'+(off?'🙈':'👁')+'</button></div><div class="gd">'+(off?'非表示中(上の合計から除外)':'支出のみの合計')+'</div></div>'}
 function mk(y,m){return y+'-'+String(m+1).padStart(2,'0')}
 function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
 function yen(n){return '¥'+Math.round(n).toLocaleString('ja-JP')}
@@ -474,12 +504,15 @@ function resText(x){var a=calc(x.e);return isNaN(a)?'⚠ 式が読み取れま�
 function rowHtml(x,i){var gc=x.k==='out'?gcol(x.g):'';return '<div class="fr '+x.k+'" data-i="'+i+'"'+(gc?' style="border-left-color:'+gc+'"':'')+'><input type="text" class="nm" list="fnames" placeholder="項目名(例: 家族カード)" value="'+esc(x.n)+'">'+
   (x.k==='out'?'<select class="gsel"><option value="">グループなし</option>'+groups.map(function(g){return '<option value="'+g.id+'"'+(x.g===g.id?' selected':'')+'>'+esc(g.n||'(名前なし)')+'</option>'}).join('')+'</select>':'')+
   '<input type="text" class="ex" placeholder="金額 例: 12800/2" value="'+esc(x.e)+'"><button class="mv" data-half="1">÷2</button><button class="x" data-del="1">✕</button>'+(x.k==='out'?'<label class="fx"><input type="checkbox" class="fxc"'+(x.f?' checked':'')+'>固定費</label>':'')+'<div class="res">'+resText(x)+'</div></div>'}
-function finSum(){var key=mk(vy,vm),t=finTotals(key);$('s_in').textContent=yen(t.i);$('s_out').textContent=yen(t.o);
+function finSum(){var key=mk(vy,vm),t=finTotalsView(key);$('s_in').textContent=yen(t.i);$('s_out').textContent=yen(t.o);
   var b=t.i-t.o;$('s_bal').textContent=yen(b);$('s_bal').style.color=b<0?'#dc2626':'';
   var m={},none={i:0,o:0},h='';
   (fin[key]||[]).forEach(function(x){if(x.k!=='out')return;var g=gfind(x.g),q=g?(m[g.id]=m[g.id]||{i:0,o:0}):none;q.o+=x.a||0});
-  groups.forEach(function(g){if(m[g.id])h+=gsHtml(g.n||'(名前なし)',PAL[g.c%PAL.length],m[g.id])});
-  if(none.i||none.o)h+=gsHtml('グループなし','#9ca3af',none);
+  var offs=[];
+  groups.forEach(function(g){if(m[g.id]){var off=grpOff.indexOf(g.id)>=0;if(off)offs.push((g.n||'(名前なし)')+' '+yen(m[g.id].o));h+=gsHtml(g.n||'(名前なし)',PAL[g.c%PAL.length],m[g.id],g.id,off)}});
+  if(none.o){var offN=grpOff.indexOf('')>=0;if(offN)offs.push('グループなし '+yen(none.o));h+=gsHtml('グループなし','#9ca3af',none,'',offN)}
+  if(grpOff.length)h+='<button class="sec sm" data-eyeall="1" style="width:100%;margin-top:4px">非表示のグループを、すべて表示に戻す</button>';
+  $('offNote').textContent=offs.length?'※ 非表示中のグループの支出を除いた金額です(支出・収支)。除外: '+offs.join('、'):'';
   jobTotUi();$('grpSum').innerHTML=h||'<div class="info">項目にグループを選ぶと、ここにグループごとの合計が出ます</div>'}
 function renderFin(){
   var key=mk(vy,vm),l=fin[key]||[],a='',b='';$('fmt').textContent=vy+'年'+(vm+1)+'月';
@@ -942,6 +975,48 @@ $('job_l').addEventListener('focusout',function(e){if(!e.target.classList.contai
 $('job_l').addEventListener('keydown',function(e){if(e.key==='Enter'&&e.target.classList.contains('jd'))e.target.blur()});
 $('job_l').addEventListener('click',function(e){var row=e.target.closest('.jr');if(!row||!e.target.dataset.jdel)return;var j=jobById(row);if(!j)return;
   jobs.splice(jobs.indexOf(j),1);jobSave();renderFin()});
+
+/* ---------- 共有用の画面(入金額) ---------- */
+var shMode='edit',shHideItems={},shHidden=[];
+function shGroupsData(){var L=fin[mk(vy,vm)]||[],out=[],defs=groups.map(function(g){return{id:g.id,n:g.n||'(名前なし)',c:PAL[g.c%PAL.length]}});
+  defs.push({id:'',n:'グループなし',c:'#9ca3af'});
+  defs.forEach(function(d){var items=[];L.forEach(function(x,i){if(x.k==='out'&&(x.a||0)>0&&((gfind(x.g)?x.g:'')===d.id))items.push({i:i,n:x.n||'(名前なし)',a:x.a})});
+    if(items.length){d.items=items;out.push(d)}});
+  return out}
+function shFit(){var c=$('shCard'),w=$('shWrap'),u=shMode==='shot'?1.35:1.1,n=0;c.style.setProperty('--u',u);
+  while(c.scrollHeight>w.clientHeight+1&&u>.45&&n++<40){u=Math.round((u-.03)*100)/100;c.style.setProperty('--u',u)}}
+function shRender(){var data=shGroupsData(),shot=shMode==='shot',total=0,h='',chips='';
+  data.forEach(function(d){var on=shHidden.indexOf(d.id)<0;
+    chips+='<button class="chip'+(on?' on':'')+'" data-gid="'+esc(d.id)+'"><span class="dot" style="background:'+d.c+'"></span>'+esc(d.n)+'</button>';
+    if(!on)return;
+    var rows='',sum=0,vis=0;
+    d.items.forEach(function(it){var off=!!shHideItems[it.i];if(!off)sum+=it.a;if(shot&&off)return;vis++;
+      rows+='<div class="sh-r'+(off?' off':'')+'" data-i="'+it.i+'"><span>'+esc(it.n)+'</span><span>'+yen(it.a)+'</span></div>'});
+    if(!vis)return;total+=sum;
+    h+='<div class="sh-g" style="border-left-color:'+d.c+'"><div class="sh-gh"><span class="dot" style="background:'+d.c+'"></span><b>'+esc(d.n)+'</b><span class="sh-gt">'+yen(sum)+'</span></div>'+rows+'</div>'});
+  $('shCard').innerHTML='<div class="sh-t">'+vy+'年'+(vm+1)+'月 入金額</div>'+(h||'<div class="info">表示する項目がありません</div>')+'<div class="sh-sum"><span>合計</span><b>'+yen(total)+'</b></div>';
+  $('shChips').innerHTML=chips||'<div class="info">支出の項目がありません</div>';
+  $('shCtl').hidden=shot;$('shBar').hidden=shot;shFit()}
+$('shOpen').onclick=function(){shMode='edit';shHideItems={};shHidden=load('st_share_v1')||[];$('shView').hidden=false;shRender()};
+$('shChips').addEventListener('click',function(e){var b=e.target.closest('.chip');if(!b)return;var id=b.dataset.gid,i=shHidden.indexOf(id);
+  if(i<0)shHidden.push(id);else shHidden.splice(i,1);save('st_share_v1',shHidden);shRender()});
+$('shCard').addEventListener('click',function(e){if(shMode==='shot'){shMode='edit';shRender();return}
+  var r=e.target.closest('.sh-r');if(!r)return;var i=r.dataset.i;if(shHideItems[i])delete shHideItems[i];else shHideItems[i]=1;shRender()});
+$('shShot').onclick=function(){shMode='shot';shRender()};
+$('shClose').onclick=function(){$('shView').hidden=true};
+$('shReset').onclick=function(){shHideItems={};shHidden=[];save('st_share_v1',shHidden);shRender()};
+window.addEventListener('resize',function(){if(!$('shView').hidden)shRender()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!$('shView').hidden)$('shView').hidden=true});
+
+/* ---------- グループの一時非表示(上の合計から引く) ---------- */
+var grpOff=load('st_grpoff_v1')||[];
+function finTotalsView(key){var t=finTotals(key),h=0;
+  (fin[key]||[]).forEach(function(x){if(x.k==='out'){var g=gfind(x.g)?x.g:'';if(grpOff.indexOf(g)>=0)h+=x.a||0}});
+  return{i:t.i,o:t.o-h}}
+$('grpSum').addEventListener('click',function(e){var b=e.target.closest('button');if(!b)return;
+  if(b.dataset.eyeall){grpOff=[];save('st_grpoff_v1',grpOff);finSum();return}
+  if(!b.dataset.eye)return;var box=b.closest('.gs'),id=box.dataset.gid,i=grpOff.indexOf(id);
+  if(i<0)grpOff.push(id);else grpOff.splice(i,1);save('st_grpoff_v1',grpOff);finSum()});
 
 bindOpts();renderSteps();setPhase('idle','🐾 待機中');idleView();restoreTimer();
 })();

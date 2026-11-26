@@ -177,7 +177,12 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
 .sh-r.off{opacity:.35;text-decoration:line-through}
 .sh-sum{display:flex;justify-content:space-between;align-items:baseline;border-top:2px solid var(--text);padding-top:.4em;margin-top:.3em;font-size:1.2em}
 .sh-sum b{font-size:1.4em}
-.gs .eye{flex:0 0 auto;padding:2px 8px;font-size:18px;background:transparent;color:var(--text);border-radius:8px;margin-left:4px}
+.gs .eye{flex:0 0 auto;padding:4px 8px;line-height:0;background:transparent;color:var(--text);border-radius:8px;margin-left:4px}
+.gs .eye svg{display:block}
+.need s{font-weight:400;opacity:.55;font-size:.8em;margin-right:.3em}
+.sh-gt s{font-weight:400;opacity:.55;font-size:.8em;margin-right:.3em}
+.sh-sum b s{font-weight:400;opacity:.55;font-size:.55em;margin-right:.3em}
+.sh-note{font-size:.7em;color:var(--sub);margin-top:.5em;text-align:right}
 .gs.off{opacity:.5}
 .gs.off .need{text-decoration:line-through}
 #toast{position:fixed;left:50%;top:calc(12px + env(safe-area-inset-top,0px));transform:translate(-50%,-200%);background:var(--text);color:var(--bg);padding:14px 20px;border-radius:12px;font-weight:600;transition:transform .3s;z-index:10;max-width:90%;text-align:center}
@@ -258,7 +263,7 @@ textarea#lkIn{width:100%;font:inherit;font-size:16px;padding:10px;border:1px sol
       <div class="info" id="offNote" style="color:#b45309;font-weight:700"></div>
     </div>
     <div class="card"><h2>🏦 グループ別の入金額(支出のみ)</h2>
-      <div class="info" style="text-align:left;line-height:1.5;margin-bottom:8px">各グループの右の「👁」をタップすると、そのグループを一時的に非表示にして、上の支出・収支の合計から引きます(給与が入る口座の引き落としを除きたいときなど)。</div>
+      <div class="info" style="text-align:left;line-height:1.5;margin-bottom:8px">各グループの右の、目のマークをタップすると、そのグループを一時的に非表示にして(斜線つきの目になります)、上の支出・収支の合計から引きます(給与が入る口座の引き落としを除きたいときなど)。入金額は、1,000円単位に切り上げて表示します(元の金額は、取り消し線つき)。</div>
       <div id="grpSum"></div>
       <button class="sec sm" id="shOpen" style="width:100%;margin-top:6px">📸 共有用の画面(選んだ項目だけ表示)</button></div>
     <div class="card"><h2>💴 収入(お小遣い・支援・給料など)</h2><div id="fin_in_l"></div><button class="sec sm" style="width:100%" data-add="in">＋ 収入を追加</button></div>
@@ -490,7 +495,11 @@ function grpSave(){save('st_grp_v1',groups)}
 function gfind(id){for(var i=0;i<groups.length;i++)if(groups[i].id===id)return groups[i];return null}
 function gcol(id){var g=gfind(id);return g?PAL[g.c%PAL.length]:''}
 function renderGroups(){$('grpList').innerHTML=groups.map(function(g,i){return '<div class="grow" data-gi="'+i+'"><button class="gdot" data-gc="1" style="background:'+PAL[g.c%PAL.length]+'"></button><input type="text" class="gname" placeholder="グループ名(例: A銀行)" value="'+esc(g.n)+'"><button class="x" data-gdel="1">✕</button></div>'}).join('')||'<div class="info">グループはありません</div>'}
-function gsHtml(n,c,b,id,off){return '<div class="gs'+(off?' off':'')+'" data-gid="'+esc(id)+'"><div class="gh"><span class="dot" style="background:'+c+'"></span><b>'+esc(n)+'</b><span class="need">入金 '+yen(b.o)+'</span><button class="eye" data-eye="1" aria-label="'+(off?'表示に戻す':'非表示にする')+'">'+(off?'🙈':'👁')+'</button></div><div class="gd">'+(off?'非表示中(上の合計から除外)':'支出のみの合計')+'</div></div>'}
+function up1000(n){return Math.ceil((n||0)/1000)*1000}
+function amtHtml(o){var r=up1000(o);return r===o?yen(o):'<s>'+yen(o)+'</s>'+yen(r)}
+var EYE_ON='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>',
+    EYE_OFF='<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+function gsHtml(n,c,b,id,off){var r=up1000(b.o);return '<div class="gs'+(off?' off':'')+'" data-gid="'+esc(id)+'"><div class="gh"><span class="dot" style="background:'+c+'"></span><b>'+esc(n)+'</b><span class="need">入金 '+amtHtml(b.o)+'</span><button class="eye" data-eye="1" aria-label="'+(off?'表示に戻す':'非表示にする')+'">'+(off?EYE_OFF:EYE_ON)+'</button></div><div class="gd">'+(off?'非表示中(上の合計から除外)':'支出のみの合計'+(r!==b.o?'・1,000円単位に切り上げ':''))+'</div></div>'}
 function mk(y,m){return y+'-'+String(m+1).padStart(2,'0')}
 function esc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}
 function yen(n){return '¥'+Math.round(n).toLocaleString('ja-JP')}
@@ -985,16 +994,16 @@ function shGroupsData(){var L=fin[mk(vy,vm)]||[],out=[],defs=groups.map(function
   return out}
 function shFit(){var c=$('shCard'),w=$('shWrap'),u=shMode==='shot'?1.35:1.1,n=0;c.style.setProperty('--u',u);
   while(c.scrollHeight>w.clientHeight+1&&u>.45&&n++<40){u=Math.round((u-.03)*100)/100;c.style.setProperty('--u',u)}}
-function shRender(){var data=shGroupsData(),shot=shMode==='shot',total=0,h='',chips='';
+function shRender(){var data=shGroupsData(),shot=shMode==='shot',total=0,totalR=0,rounded=false,h='',chips='';
   data.forEach(function(d){var on=shHidden.indexOf(d.id)<0;
     chips+='<button class="chip'+(on?' on':'')+'" data-gid="'+esc(d.id)+'"><span class="dot" style="background:'+d.c+'"></span>'+esc(d.n)+'</button>';
     if(!on)return;
     var rows='',sum=0,vis=0;
     d.items.forEach(function(it){var off=!!shHideItems[it.i];if(!off)sum+=it.a;if(shot&&off)return;vis++;
       rows+='<div class="sh-r'+(off?' off':'')+'" data-i="'+it.i+'"><span>'+esc(it.n)+'</span><span>'+yen(it.a)+'</span></div>'});
-    if(!vis)return;total+=sum;
-    h+='<div class="sh-g" style="border-left-color:'+d.c+'"><div class="sh-gh"><span class="dot" style="background:'+d.c+'"></span><b>'+esc(d.n)+'</b><span class="sh-gt">'+yen(sum)+'</span></div>'+rows+'</div>'});
-  $('shCard').innerHTML='<div class="sh-t">'+vy+'年'+(vm+1)+'月 入金額</div>'+(h||'<div class="info">表示する項目がありません</div>')+'<div class="sh-sum"><span>合計</span><b>'+yen(total)+'</b></div>';
+    if(!vis)return;total+=sum;totalR+=up1000(sum);if(up1000(sum)!==sum)rounded=true;
+    h+='<div class="sh-g" style="border-left-color:'+d.c+'"><div class="sh-gh"><span class="dot" style="background:'+d.c+'"></span><b>'+esc(d.n)+'</b><span class="sh-gt">'+amtHtml(sum)+'</span></div>'+rows+'</div>'});
+  $('shCard').innerHTML='<div class="sh-t">'+vy+'年'+(vm+1)+'月 入金額</div>'+(h||'<div class="info">表示する項目がありません</div>')+'<div class="sh-sum"><span>合計</span><b>'+(totalR===total?yen(total):'<s>'+yen(total)+'</s>'+yen(totalR))+'</b></div>'+(rounded?'<div class="sh-note">※ 各グループの合計は、1,000円単位に切り上げ(取り消し線は元の金額)</div>':'');
   $('shChips').innerHTML=chips||'<div class="info">支出の項目がありません</div>';
   $('shCtl').hidden=shot;$('shBar').hidden=shot;shFit()}
 $('shOpen').onclick=function(){shMode='edit';shHideItems={};shHidden=load('st_share_v1')||[];$('shView').hidden=false;shRender()};
